@@ -2,7 +2,7 @@
   <defs>
     <linearGradient id="ch" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#2a7bdc" />
-      <stop offset="100%" stop-color="#f4b860" />
+      <stop offset="100%" stop-color="#1f6f5c" />
     </linearGradient>
   </defs>
   <rect width="800" height="480" rx="36" fill="url(#ch)" />
@@ -12,3 +12,4 @@
   <circle cx="500" cy="230" r="60" fill="rgba(255,255,255,0.35)" />
   <path d="M390 210l20 40 40-90" stroke="rgba(255,255,255,0.8)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
 </svg>
+

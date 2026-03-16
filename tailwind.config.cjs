@@ -4,15 +4,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ink: "#0b0f14",
+        night: "#0b0f14",
         slate: "#1f2937",
         sand: "#f5efe6",
-        clay: "#f0e3d1",
+        clay: "#1b2433",
         moss: "#2f5d50",
         coral: "#f26b5b",
         ocean: "#2a7bdc",
-        gold: "#f4b860",
-        mist: "#f8fafc"
+        gold: "#1f6f5c",
+        mist: "#cbd5e1"
       },
       fontFamily: {
         display: ["Space Grotesk", "sans-serif"],

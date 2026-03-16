@@ -2,7 +2,7 @@
   <defs>
     <linearGradient id="vv" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f26b5b" />
-      <stop offset="100%" stop-color="#f4b860" />
+      <stop offset="100%" stop-color="#1f6f5c" />
     </linearGradient>
   </defs>
   <rect width="800" height="480" rx="36" fill="url(#vv)" />
@@ -11,3 +11,4 @@
   <rect x="120" y="250" width="560" height="140" rx="28" fill="rgba(15,23,42,0.15)" />
   <path d="M210 320h120l30-40 30 60 40-80 40 60h90" stroke="rgba(255,255,255,0.8)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
 </svg>
+
