@@ -13,7 +13,7 @@ export const profile = {
   location: "Waterloo, Ontario, Canada",
   email: "rodrigopichara7@gmail.com",
   github: "https://github.com/Pichara",
-  linkedin: "https://linkedin.com/in/rodrigo-pichara-gomes",
+  linkedin: "https://www.linkedin.com/in/rodrigo-pichara-gomes-a6202a27b/",
   tagline:
     "Brazilian software engineer focused on secure backend systems, Python tooling, and AI-driven products.",
   summaryShort:
