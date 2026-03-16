@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pichara.github.io/sitemap.xml

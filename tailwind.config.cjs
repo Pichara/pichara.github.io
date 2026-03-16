@@ -1,0 +1,29 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        ink: "#0b0f14",
+        slate: "#1f2937",
+        sand: "#f5efe6",
+        clay: "#f0e3d1",
+        moss: "#2f5d50",
+        coral: "#f26b5b",
+        ocean: "#2a7bdc",
+        gold: "#f4b860",
+        mist: "#f8fafc"
+      },
+      fontFamily: {
+        display: ["Space Grotesk", "sans-serif"],
+        body: ["IBM Plex Sans", "sans-serif"],
+        mono: ["IBM Plex Mono", "monospace"]
+      },
+      boxShadow: {
+        glow: "0 20px 45px -20px rgba(17, 24, 39, 0.35)",
+        soft: "0 18px 40px -28px rgba(15, 23, 42, 0.45)"
+      }
+    }
+  },
+  plugins: []
+};
