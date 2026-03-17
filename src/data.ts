@@ -16,9 +16,9 @@ export const profile = {
   tagline:
     "Software engineer focused on secure backend systems, Python tooling, and AI-driven products.",
   summaryShort:
-    "Software engineering student based in Waterloo, Ontario. Studying Software Engineering Technology at Conestoga College with an expected 2027 graduation.",
+    "Software engineering student based in Waterloo, Ontario. Studying Software Engineering Technology at Conestoga College with an expected 2028 graduation. Available for co-op Spring 2026 through Fall 2027 (4 to 16 months).",
   summaryLong:
-    "Rodrigo \"Pichara\" Gomes is a software engineer based in Waterloo, Ontario. He is studying Software Engineering Technology at Conestoga College and expects to graduate in 2027. He enjoys backend development, Python, AI, and cybersecurity, speaks English, Portuguese, and Spanish, and regularly contributes to workshops and hackathons.",
+    "Rodrigo \"Pichara\" Gomes is a software engineer based in Waterloo, Ontario. He is studying Software Engineering Technology at Conestoga College and expects to graduate in 2028. He is available for co-op from Spring 2026 through Fall 2027 (4 to 16 months). He enjoys backend development, Python, AI, and cybersecurity, speaks English, Portuguese, and Spanish, and regularly contributes to workshops and hackathons.",
   languages: ["English", "Portuguese", "Spanish"]
 };
 
@@ -84,7 +84,7 @@ export const timeline = [
     location: "Ontario, Canada",
     period: "Sep 2024 – Apr 2028",
     description:
-      "Three-year Ontario College Advanced Diploma focused on web development, databases, and cybersecurity. Coursework includes application security, SQL, operating systems, OOP, and C. Expected graduation April 2027. GPA 3.6+.",
+      "Three-year Ontario College Advanced Diploma focused on web development, databases, and cybersecurity. Coursework includes application security, SQL, operating systems, OOP, and C. Expected graduation April 2028. GPA 3.6+.",
     type: "education"
   },
   {
