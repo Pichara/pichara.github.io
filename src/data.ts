@@ -1,6 +1,5 @@
 import vidaViva from "./assets/project-vida-viva.svg";
 import autoHighlights from "./assets/project-autohighlights.svg";
-import gabaritech from "./assets/project-gabaritech.svg";
 import lanMessaging from "./assets/project-lan.svg";
 import lockText from "./assets/project-locktext.svg";
 import conhacks from "./assets/project-conhacks.svg";
@@ -15,11 +14,11 @@ export const profile = {
   github: "https://github.com/Pichara",
   linkedin: "https://www.linkedin.com/in/rodrigo-pichara-gomes-a6202a27b/",
   tagline:
-    "Brazilian software engineer focused on secure backend systems, Python tooling, and AI-driven products.",
+    "Software engineer focused on secure backend systems, Python tooling, and AI-driven products.",
   summaryShort:
-    "Brazilian software engineer based in Waterloo, Ontario. Studying Software Engineering Technology at Conestoga College with an expected 2027 graduation.",
+    "Software engineering student based in Waterloo, Ontario. Studying Software Engineering Technology at Conestoga College with an expected 2027 graduation.",
   summaryLong:
-    "Rodrigo \"Pichara\" Gomes is a Brazilian software engineer based in Waterloo, Ontario. He is studying Software Engineering Technology at Conestoga College and expects to graduate in 2027. Outside of classes he works on freelance projects and participates in bug-bounty programs, building a strong appreciation for security and quality. He enjoys backend development, Python, AI, and cybersecurity, speaks English, Portuguese, and Spanish, and regularly contributes to workshops and hackathons.",
+    "Rodrigo \"Pichara\" Gomes is a software engineer based in Waterloo, Ontario. He is studying Software Engineering Technology at Conestoga College and expects to graduate in 2027. He enjoys backend development, Python, AI, and cybersecurity, speaks English, Portuguese, and Spanish, and regularly contributes to workshops and hackathons.",
   languages: ["English", "Portuguese", "Spanish"]
 };
 
@@ -124,22 +123,6 @@ export const projects = [
     stack: ["Python", "Playwright", "Selenium", "MoviePy"],
     link: "https://github.com/Pichara/AutoHighlights",
     image: autoHighlights
-  },
-  {
-    name: "Gabaritech MYSQL",
-    description:
-      "Exam practice tracker that stores answers in MySQL and evaluates responses for study sessions.",
-    stack: ["MySQL", "C++"],
-    link: "https://github.com/Pichara/Gabaritech_MYSQL",
-    image: gabaritech
-  },
-  {
-    name: "Gabaritech TXT",
-    description:
-      "Offline-friendly version of the exam tracker using local text storage and instant feedback.",
-    stack: ["C++", "Local TXT"],
-    link: "https://github.com/Pichara/Gabaritech_TXT",
-    image: gabaritech
   },
   {
     name: "OOP-Project (LAN Messaging)",
