@@ -16,9 +16,9 @@ export const profile = {
   tagline:
     "Software engineer focused on secure backend systems, Python tooling, and AI-driven products.",
   summaryShort:
-    "Software engineering student based in Waterloo, Ontario. Studying Software Engineering Technology at Conestoga College with an expected 2028 graduation. Available for co-op Spring 2026 through Fall 2027 (4 to 16 months).",
+    "I'm a software engineering student based in Waterloo, Ontario. I'm studying Software Engineering Technology at Conestoga College with an expected 2028 graduation. I'm available for co-op Spring 2026 through Fall 2027 (4 to 16 months).",
   summaryLong:
-    "Rodrigo \"Pichara\" Gomes is a software engineer based in Waterloo, Ontario. He is studying Software Engineering Technology at Conestoga College and expects to graduate in 2028. He is available for co-op from Spring 2026 through Fall 2027 (4 to 16 months). He enjoys backend development, Python, AI, and cybersecurity, speaks English, Portuguese, and Spanish, and regularly contributes to workshops and hackathons.",
+    "I'm a software engineer based in Waterloo, Ontario. I'm studying Software Engineering Technology at Conestoga College and expect to graduate in 2028. I'm available for co-op from Spring 2026 through Fall 2027 (4 to 16 months). I enjoy backend development, Python, AI, and cybersecurity, speak English, Portuguese, and Spanish, and regularly contribute to workshops and hackathons.",
   languages: ["English", "Portuguese", "Spanish"]
 };
 

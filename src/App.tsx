@@ -104,7 +104,7 @@ export default function App() {
           <div className="space-y-8" data-reveal>
             <span className="pill">Building secure, scalable products</span>
             <div className="space-y-5">
-              <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+              <h1 className="font-display text-[clamp(1.4rem,4.5vw,3.75rem)] font-semibold tracking-tight whitespace-nowrap">
                 {profile.name}
               </h1>
               <p className="text-lg text-mist/80 md:text-xl">{profile.tagline}</p>
