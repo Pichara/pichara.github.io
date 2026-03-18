@@ -18,14 +18,12 @@ export const profile = {
   summaryShort:
     "I'm a software engineering student based in Waterloo, Ontario. I'm studying Software Engineering Technology at Conestoga College with an expected 2028 graduation. I'm available for co-op Spring 2026 through Fall 2027 (4 to 16 months).",
   summaryLong:
-    "I'm a software engineer based in Waterloo, Ontario. I'm studying Software Engineering Technology at Conestoga College and expect to graduate in 2028. I'm available for co-op from Spring 2026 through Fall 2027 (4 to 16 months). I enjoy backend development, Python, AI, and cybersecurity, speak English, Portuguese, and Spanish, and regularly contribute to workshops and hackathons.",
-  languages: ["English", "Portuguese", "Spanish"]
+    "I'm a software engineer based in Waterloo, Ontario. I'm studying Software Engineering Technology at Conestoga College and expect to graduate in 2028. I'm available for co-op from Spring 2026 through Fall 2027 (4 to 16 months). I enjoy backend development, Python, AI, and cybersecurity, and regularly contribute to workshops and hackathons."
 };
 
 export const stats = [
-  { label: "Daily users supported", value: "400+" },
-  { label: "ConHacks 2025", value: "2nd Place" },
-  { label: "Spoken languages", value: "3" }
+  { label: "App that supports", value: "400+ Users" },
+  { label: "ConHacks 2025", value: "2nd Place" }
 ];
 
 export const skills = {
@@ -75,7 +73,7 @@ export const timeline = [
     location: "Brazil",
     period: "Jan 2023 – Jun 2023",
     description:
-      "Built a patient and materials registration system using Python. Replaced paper-based workflows, improved data reliability, and supported 400+ daily users.",
+      "Built a patient and materials registration system using Python. Replaced paper-based workflows, improved data reliability, and delivered an app that supports 400+ users.",
     type: "work"
   },
   {

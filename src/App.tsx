@@ -142,13 +142,6 @@ export default function App() {
               </p>
               <p className="mt-4 text-lg font-semibold text-sand">{profile.role}</p>
               <p className="mt-3 text-sm text-mist/80">{profile.summaryShort}</p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                {profile.languages.map((language) => (
-                  <span key={language} className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-sand">
-                    {language}
-                  </span>
-                ))}
-              </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="card p-6">
