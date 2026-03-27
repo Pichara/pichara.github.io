@@ -6,8 +6,8 @@
   color-scheme: dark;
   --text: #f5efe6;
   --muted: #cbd5e1;
-  --surface: rgba(17, 24, 39, 0.7);
-  --surface-strong: rgba(17, 24, 39, 0.9);
+  --surface: rgba(13, 27, 42, 0.7);
+  --surface-strong: rgba(13, 27, 42, 0.9);
   --stroke: rgba(255, 255, 255, 0.12);
 }
 
@@ -24,10 +24,10 @@ body {
   font-family: "IBM Plex Sans", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at 12% 15%, rgba(242, 107, 91, 0.18), transparent 45%),
-    radial-gradient(circle at 90% 10%, rgba(42, 123, 220, 0.2), transparent 48%),
-    radial-gradient(circle at 80% 80%, rgba(244, 184, 96, 0.18), transparent 45%),
-    linear-gradient(180deg, #0b0f14 0%, #101826 60%, #0b0f14 100%);
+    radial-gradient(circle at 12% 15%, rgba(212, 97, 39, 0.15), transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(30, 50, 80, 0.2), transparent 50%),
+    radial-gradient(circle at 75% 85%, rgba(212, 97, 39, 0.12), transparent 40%),
+    linear-gradient(180deg, #0d1b2a 0%, #08101a 60%, #0d1b2a 100%);
   min-height: 100vh;
 }
 
@@ -68,7 +68,7 @@ section {
     left: 1rem;
     top: -3rem;
     padding: 0.75rem 1rem;
-    background: #1f6f5c;
+    background: #d46127;
     color: #f5efe6;
     border-radius: 999px;
     font-weight: 600;

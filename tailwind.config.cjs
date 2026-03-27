@@ -4,14 +4,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        night: "#0b0f14",
-        slate: "#1f2937",
+        night: "#0a0f1a",
+        darkblue: "#0d1b2a",
+        darkerblue: "#08101a",
+        darkorange: "#d46127",
         sand: "#f5efe6",
         clay: "#1b2433",
-        moss: "#2f5d50",
-        coral: "#f26b5b",
-        ocean: "#2a7bdc",
-        gold: "#1f6f5c",
         mist: "#cbd5e1"
       },
       fontFamily: {
@@ -20,8 +18,8 @@ module.exports = {
         mono: ["IBM Plex Mono", "monospace"]
       },
       boxShadow: {
-        glow: "0 20px 45px -20px rgba(17, 24, 39, 0.35)",
-        soft: "0 18px 40px -28px rgba(15, 23, 42, 0.45)"
+        glow: "0 20px 45px -20px rgba(212, 97, 39, 0.3)",
+        soft: "0 18px 40px -28px rgba(13, 27, 42, 0.5)"
       }
     }
   },

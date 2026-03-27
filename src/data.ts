@@ -21,11 +21,6 @@ export const profile = {
     "I'm a software engineer based in Waterloo, Ontario. I'm studying Software Engineering Technology at Conestoga College and expect to graduate in 2028. I'm available for co-op from Spring 2026 through Fall 2027 (4 to 16 months). I enjoy backend development, Python, AI, and cybersecurity, and regularly contribute to workshops and hackathons."
 };
 
-export const stats = [
-  { label: "App that supports", value: "400+ Users" },
-  { label: "ConHacks 2025", value: "2nd Place" }
-];
-
 export const skills = {
   languages: ["Python", "C", "C#", "SQL", "HTML/CSS"],
   frameworks: [
