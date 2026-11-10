@@ -8,17 +8,17 @@ import librarySystem from "./assets/project-library.svg";
 export const profile = {
   name: "Rodrigo Pichara Gomes",
   shortName: "Rodrigo \"Pichara\" Gomes",
-  role: "Software Engineer | Backend, Python, AI, Cybersecurity",
+  role: "Software Engineer | Full-Stack, C#, Python, Security",
   location: "Waterloo, Ontario, Canada",
   email: "rodrigopichara7@gmail.com",
   github: "https://github.com/Pichara",
   linkedin: "https://www.linkedin.com/in/rodrigo-pichara-gomes-a6202a27b/",
   tagline:
-    "Software engineer focused on secure backend systems, Python tooling, and AI-driven products.",
+    "I build practical full-stack products and reliable systems with C#, Python, and a security-first mindset.",
   summaryShort:
-    "I'm a software engineering student based in Waterloo, Ontario. I'm studying Software Engineering Technology at Conestoga College with an expected 2028 graduation. I'm available for co-op Spring 2026 through Fall 2027 (4 to 16 months).",
+    "I'm a Software Engineering Technology student at Conestoga College in Waterloo, graduating in 2028. I build software across C#, Python, and web technologies.",
   summaryLong:
-    "I'm a software engineer based in Waterloo, Ontario. I'm studying Software Engineering Technology at Conestoga College and expect to graduate in 2028. I'm available for co-op from Spring 2026 through Fall 2027 (4 to 16 months). I enjoy backend development, Python, AI, and cybersecurity, and regularly contribute to workshops and hackathons."
+    "I'm a Software Engineering Technology student at Conestoga College in Waterloo, graduating in 2028. I've contributed as an IS Programmer / Full-Stack Developer co-op at Delta Elevator, and I love turning practical problems into secure, maintainable software. My work spans C#, Python, web development, automation, and applied cybersecurity."
 };
 
 export const skills = {
@@ -53,6 +53,15 @@ export const skills = {
 };
 
 export const timeline = [
+  {
+    title: "IS Programmer · Full-Stack Developer (Co-op)",
+    org: "Delta Elevator Co. Ltd.",
+    location: "Kitchener, ON",
+    period: "2026",
+    description:
+      "Contributed to internal software development during a co-op term, working across application layers and collaborating on practical tools for business users.",
+    type: "work"
+  },
   {
     title: "Executive Team Lead",
     org: "Google Developer Group",
