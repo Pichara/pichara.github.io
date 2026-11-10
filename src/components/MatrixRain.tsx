@@ -61,16 +61,15 @@ export function MatrixRain() {
     function animate(timestamp: number) {
       frameId = 0;
       if (!active || document.hidden || reducedMotion) return;
-      if (lastFrame === 0) lastFrame = timestamp;
-      const elapsed = Math.min((timestamp - lastFrame) / 1000, 0.1);
-      lastFrame = timestamp;
-      // 24 FPS desktop / 18 FPS mobile; don't paint unused intermediate frames.
+      // 24 FPS desktop / 18 FPS mobile; no wasted intermediate paints.
       const interval = layout.width < 640 ? 1000 / 18 : 1000 / 24;
       if (timestamp - lastDraw >= interval) {
+        const elapsed = lastFrame === 0 ? interval / 1000 : (timestamp - lastFrame) / 1000;
         advanceRainColumns(columns, elapsed, layout.height, layout.fontSize);
         generation = Math.floor(timestamp / 180);
         paint();
         lastDraw = timestamp;
+        lastFrame = timestamp;
       }
       frameId = requestAnimationFrame(animate);
     }

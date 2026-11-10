@@ -24,7 +24,7 @@ export function createRainColumns(layout, random = Math.random) {
     const trail = 8 + Math.floor(random() * 15);
     columns.push({
       x: index * layout.spacing + layout.spacing / 2,
-      head: -random() * (layout.height + trail * layout.fontSize),
+      head: random() * (layout.height + trail * layout.fontSize) - trail * layout.fontSize,
       speed: 20 + random() * 46,
       trail,
       opacity: 0.35 + random() * 0.65,

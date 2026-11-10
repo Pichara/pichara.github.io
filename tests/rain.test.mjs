@@ -16,6 +16,7 @@ test("rain streams have bounded parameters and numeric coordinates", () => {
     assert.ok(column.trail >= 8 && column.trail <= 22);
     assert.ok(column.speed >= 20 && column.speed <= 66);
     assert.ok(Number.isFinite(column.head));
+    assert.ok(column.head <= layout.height);
     assert.ok(column.x <= layout.width + layout.spacing);
   }
   assert.ok(MATRIX_GLYPHS.includes("A"));
