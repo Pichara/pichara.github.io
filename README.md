@@ -1,43 +1,31 @@
-# Rodrigo Pichara Gomes — Personal Site
+# Pichara — Engineering Portfolio
 
-<div align="center">
-  <h2>
-    <a href="https://pichara.github.io/">https://pichara.github.io/</a>
-  </h2>
-</div>
+React 18 + TypeScript + Tailwind CSS + Vite portfolio with a premium green-on-black interface and full-page **Matrix digital rain**.
 
-**Overview**
-This is a fully static, performance-focused portfolio built with React + TypeScript and bundled with Vite. Styling is done with Tailwind CSS and a custom dark theme. The content is sourced from a single data file so it stays easy to maintain.
+## Design
+- High-intensity animated green code rain, fixed to the viewport so it stays visible throughout the entire page.
+- Canvas rendering capped to ~30 fps desktop / ~20 fps on mobile, with reduced-motion support and a Rain ON/OFF toggle.
+- Clean, responsive hero, skills, experience timeline, project cards, and contact section.
+- All original project selections remain in `src/data.ts`.
+- Verified Delta Elevator IS Programmer/full-stack co-op entry in experience. See public LinkedIn profile/post: https://www.linkedin.com/in/rodrigo-pichara-gomes-a6202a27b/
 
-**Tech Stack**
-- React 18 + TypeScript
-- Vite (fast dev + build)
-- Tailwind CSS (utility-first styling)
-- Formspree (contact form submissions)
-- GitHub Actions (CI + Pages deploy)
-
-**Project Structure**
-- `src/App.tsx` — main UI layout and sections
-- `src/data.ts` — all content (bio, skills, experience, projects)
-- `src/index.css` — global styles + theme
-- `src/assets/` — images and SVG assets
-- `public/` — favicon, OG image, sitemap, robots
-- `.github/workflows/pages.yml` — Pages deploy pipeline
-
-**Local Development**
+## Development
 ```bash
-npm install
+npm ci
 npm run dev
-```
-
-**Production Build**
-```bash
+npm run check   # TypeScript + animation unit tests
 npm run build
-npm run preview
 ```
 
-**Deployment (GitHub Pages)**
-Every push to `main` triggers the workflow in `.github/workflows/pages.yml`.
+## Structure
+- `src/App.tsx` — page composition, reveal lifecycle and rain toggle.
+- `src/components/` — reusable site sections and accessible Matrix canvas.
+- `src/effects/matrix-core.mjs` — independent, testable rain model.
+- `src/data.ts` — profile, experience, project selections, skills.
+- `src/index.css` — global design system and responsive styling.
+- `tests/` — Node built-in test runner, no new test dependencies.
 
-After the workflow finishes, the site updates at:
-https://pichara.github.io/
+## Deploy
+A PR triggers typechecking, tests, and a Vite build without deploying. Merging into `main` triggers the same checks and GitHub Pages deployment through `.github/workflows/pages.yml`.
+
+The contact form uses the existing Formspree endpoint. For production, verify the endpoint in Formspree and test a real submission.
