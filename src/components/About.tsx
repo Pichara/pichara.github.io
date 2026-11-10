@@ -12,6 +12,7 @@ export default function About() {
   return (
     <section id="about" className="section container-shell" aria-labelledby="about-title">
       <SectionHeading
+        id="about-title"
         index="01"
         eyebrow="ABOUT ME"
         title="Engineering with curiosity. Building with purpose."

@@ -11,7 +11,7 @@ test("creates dense columns sized to the full viewport", () => {
   const columns = createRainColumns(1366, 900, 19, () => 0.5);
   assert.equal(columns.length, 72);
   assert.deepEqual(columns.map(({ x }) => x), Array.from({ length: 72 }, (_, i) => i));
-  assert.ok(columns.every(({ y, speed, length }) => y < 0 && speed > 0 && length >= 9));
+  assert.ok(columns.every(({ y, speed, length }) => Number.isFinite(y) && speed > 0 && length >= 9));
 });
 
 test("caps density and rejects invalid dimensions", () => {

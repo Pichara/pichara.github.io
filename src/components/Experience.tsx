@@ -5,6 +5,7 @@ export default function Experience() {
   return (
     <section id="experience" className="section container-shell" aria-labelledby="experience-title">
       <SectionHeading
+        id="experience-title"
         index="02"
         eyebrow="THE JOURNEY"
         title="Real work. Real learning."

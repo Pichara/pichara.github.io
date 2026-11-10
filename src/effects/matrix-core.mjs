@@ -22,7 +22,8 @@ export function createRainColumns(width, height, cellSize = 19, random = Math.ra
   const rows = Math.ceil(height / cellSize);
   return Array.from({ length: count }, (_, x) => ({
     x,
-    y: -clampRandom(random) * (rows + 8),
+    // Populate the viewport immediately rather than waiting for heads to arrive.
+    y: clampRandom(random) * (rows + 25) - 12,
     speed: speed(random),
     length: 9 + Math.floor(clampRandom(random) * 19),
     glyphOffset: Math.floor(clampRandom(random) * MATRIX_GLYPHS.length),

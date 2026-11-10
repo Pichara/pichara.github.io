@@ -6,6 +6,7 @@ export default function Projects() {
   return (
     <section id="projects" className="section container-shell" aria-labelledby="projects-title">
       <SectionHeading
+        id="projects-title"
         index="03"
         eyebrow="SELECTED WORK"
         title="Things I've built."

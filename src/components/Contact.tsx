@@ -5,7 +5,8 @@ import SectionHeading from "./SectionHeading";
 export default function Contact() {
   return (
     <section id="contact" className="section section-contact container-shell" aria-labelledby="contact-title">
-      <SectionHeading index="04" eyebrow="CONNECT" title="Let's build something meaningful."
+      <SectionHeading
+        id="contact-title" index="04" eyebrow="CONNECT" title="Let's build something meaningful."
         description="Have a project, opportunity, or interesting engineering challenge? I'd love to hear about it." />
       <div className="contact-grid" data-reveal>
         <div className="contact-aside">
