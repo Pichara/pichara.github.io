@@ -16,9 +16,9 @@ export const profile = {
   tagline:
     "Software engineer focused on secure backend systems, Python tooling, and AI-driven products.",
   summaryShort:
-    "I'm a software engineering student based in Waterloo, Ontario. I'm studying Software Engineering Technology at Conestoga College with an expected 2028 graduation. I'm available for co-op Spring 2026 through Fall 2027 (4 to 16 months).",
+    "I'm a Software Engineering Technology student at Conestoga College, graduating in 2028. I also work on production software as an IS Programmer / Full-Stack Developer at Delta Elevator in Kitchener.",
   summaryLong:
-    "I'm a software engineer based in Waterloo, Ontario. I'm studying Software Engineering Technology at Conestoga College and expect to graduate in 2028. I'm available for co-op from Spring 2026 through Fall 2027 (4 to 16 months). I enjoy backend development, Python, AI, and cybersecurity, and regularly contribute to workshops and hackathons."
+    "I've been building software since my early teens. Today I combine Software Engineering Technology studies at Conestoga College with hands-on application development at Delta Elevator. My interests span C#, Python, full-stack engineering, security research, AI, and projects that make everyday work easier."
 };
 
 export const skills = {
@@ -53,6 +53,15 @@ export const skills = {
 };
 
 export const timeline = [
+  {
+    title: "IS Programmer · Full-Stack Developer (Co-op)",
+    org: "Delta Elevator Co Ltd",
+    location: "Kitchener, Ontario",
+    period: "May 2026 – Present",
+    description:
+      "Develop and maintain internal business applications with C# and WPF, collaborating with users to turn operational needs into working software and supporting backend, source-control, and AI-related improvements.",
+    type: "work"
+  },
   {
     title: "Executive Team Lead",
     org: "Google Developer Group",
