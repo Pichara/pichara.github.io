@@ -1,43 +1,40 @@
-# Rodrigo Pichara Gomes — Personal Site
+# Rodrigo Pichara Gomes — Portfolio
 
-<div align="center">
-  <h2>
-    <a href="https://pichara.github.io/">https://pichara.github.io/</a>
-  </h2>
-</div>
+React + TypeScript + Vite + Tailwind CSS personal developer portfolio, deployed as a static GitHub Pages site.
 
-**Overview**
-This is a fully static, performance-focused portfolio built with React + TypeScript and bundled with Vite. Styling is done with Tailwind CSS and a custom dark theme. The content is sourced from a single data file so it stays easy to maintain.
+## Design
+Premium dark forest-green design, clean editorial typography, and subtle Matrix digital rain through every section. The animation uses a **single fixed canvas**, bounded column count, reduced frame rate on mobile, capped pixel ratio, hidden-tab pause, and `prefers-reduced-motion` support. No animation libraries or background network calls.
 
-**Tech Stack**
-- React 18 + TypeScript
-- Vite (fast dev + build)
-- Tailwind CSS (utility-first styling)
-- Formspree (contact form submissions)
-- GitHub Actions (CI + Pages deploy)
+Existing project descriptions, imagery, and GitHub links are stored in `src/data.ts` and intentionally preserved.
 
-**Project Structure**
-- `src/App.tsx` — main UI layout and sections
-- `src/data.ts` — all content (bio, skills, experience, projects)
-- `src/index.css` — global styles + theme
-- `src/assets/` — images and SVG assets
-- `public/` — favicon, OG image, sitemap, robots
-- `.github/workflows/pages.yml` — Pages deploy pipeline
+## Run locally
+Requires Node.js 22+.
 
-**Local Development**
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-**Production Build**
+## Validation
 ```bash
+npm run typecheck
+npm test
 npm run build
-npm run preview
 ```
 
-**Deployment (GitHub Pages)**
-Every push to `main` triggers the workflow in `.github/workflows/pages.yml`.
+The unit tests validate animation geometry, timing limits, featured project preservation, and PR deployment safeguards.
 
-After the workflow finishes, the site updates at:
-https://pichara.github.io/
+## Project structure
+- `src/App.tsx` — page composition and scroll-reveal orchestration
+- `src/components/` — independently maintained UI sections, including `MatrixRain.tsx`
+- `src/lib/rain.mjs` — deterministic animation math; `rain.d.mts` — TypeScript signatures
+- `src/data.ts` — profile, skills, experience, and projects
+- `src/index.css` / `tailwind.config.cjs` — theme and global styles
+- `tests/` — Node.js unit and integrity tests
+- `.github/workflows/pages.yml` — CI and static site deployment
+
+## Deploy
+Pull requests run typechecking, tests, and the production Vite build, but **do not deploy**. Merging to `main` triggers the GitHub Pages deployment at https://pichara.github.io/.
+
+## Manual visual QA
+Before merging, verify the hero, all six project cards, the contact form, keyboard navigation, and mobile menu on both desktop and mobile. Scroll to the footer to verify that the subtle green rain stays visible behind the page. Enable reduced motion in OS/browser settings and confirm the rain stops moving.
