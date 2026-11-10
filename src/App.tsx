@@ -71,7 +71,7 @@ export default function App() {
       <header className="sticky top-0 z-40 border-b border-white/10 bg-white/5 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-darkorange text-sand shadow-glow">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-darkgreen text-sand shadow-glow">
               RP
             </div>
             <div>
@@ -92,7 +92,7 @@ export default function App() {
           </nav>
           <a
             href="#contact"
-            className="rounded-full bg-darkorange px-5 py-2 text-sm font-semibold text-sand shadow-glow transition hover:-translate-y-0.5"
+            className="rounded-full bg-darkgreen px-5 py-2 text-sm font-semibold text-sand shadow-glow transition hover:-translate-y-0.5"
           >
             Let's Talk
           </a>
@@ -112,7 +112,7 @@ export default function App() {
             <div className="flex flex-wrap items-center gap-4">
               <a
                 href="#projects"
-                className="rounded-full bg-darkorange px-6 py-3 text-sm font-semibold text-sand shadow-glow transition hover:-translate-y-0.5"
+                className="rounded-full bg-darkgreen px-6 py-3 text-sm font-semibold text-sand shadow-glow transition hover:-translate-y-0.5"
               >
                 View Projects
               </a>
@@ -194,7 +194,7 @@ export default function App() {
             {timeline.map((item) => (
               <div key={item.title} className="card flex flex-col gap-4 p-6 md:flex-row md:items-start">
                 <div className="flex-shrink-0">
-                  <span className="rounded-full bg-darkorange px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-night">
+                  <span className="rounded-full bg-darkgreen px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sand">
                     {item.type}
                   </span>
                 </div>
@@ -232,7 +232,7 @@ export default function App() {
                       href={project.link}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs font-semibold uppercase tracking-[0.2em] text-darkorange"
+                      className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300"
                     >
                       Repository
                     </a>
@@ -302,7 +302,7 @@ export default function App() {
                   id="name"
                   name="name"
                   required
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-sand placeholder:text-mist/60 focus:border-darkorange focus:outline-none"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-sand placeholder:text-mist/60 focus:border-emerald-400 focus:outline-none"
                 />
               </div>
               <div>
@@ -314,7 +314,7 @@ export default function App() {
                   name="email"
                   type="email"
                   required
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-sand placeholder:text-mist/60 focus:border-darkorange focus:outline-none"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-sand placeholder:text-mist/60 focus:border-emerald-400 focus:outline-none"
                 />
               </div>
               <div>
@@ -326,12 +326,12 @@ export default function App() {
                   name="message"
                   rows={5}
                   required
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-sand placeholder:text-mist/60 focus:border-darkorange focus:outline-none"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-sand placeholder:text-mist/60 focus:border-emerald-400 focus:outline-none"
                 ></textarea>
               </div>
               <button
                 type="submit"
-                className="w-full rounded-full bg-darkorange px-6 py-3 text-sm font-semibold text-sand shadow-glow transition hover:-translate-y-0.5"
+                className="w-full rounded-full bg-darkgreen px-6 py-3 text-sm font-semibold text-sand shadow-glow transition hover:-translate-y-0.5"
               >
                 Send Message
               </button>

@@ -7,7 +7,7 @@ module.exports = {
         night: "#0a0f1a",
         darkblue: "#0d1b2a",
         darkerblue: "#08101a",
-        darkorange: "#d46127",
+        darkgreen: "#166534",
         sand: "#f5efe6",
         clay: "#1b2433",
         mist: "#cbd5e1"
@@ -18,7 +18,7 @@ module.exports = {
         mono: ["IBM Plex Mono", "monospace"]
       },
       boxShadow: {
-        glow: "0 20px 45px -20px rgba(212, 97, 39, 0.3)",
+        glow: "0 20px 45px -20px rgba(22, 101, 52, 0.3)",
         soft: "0 18px 40px -28px rgba(13, 27, 42, 0.5)"
       }
     }
