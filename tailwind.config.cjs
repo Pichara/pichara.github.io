@@ -4,12 +4,14 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        night: "#0a0f1a",
-        darkblue: "#0d1b2a",
-        darkerblue: "#08101a",
+        night: "#050b09",
+        darkblue: "#0c1812",
+        darkerblue: "#07100b",
         darkgreen: "#14532d",
+        "forest-light": "#a8e8bb",
+        paper: "#eff7ef",
         sand: "#f5efe6",
-        clay: "#1b2433",
+        clay: "#17231c",
         mist: "#cbd5e1"
       },
       fontFamily: {
@@ -19,7 +21,7 @@ module.exports = {
       },
       boxShadow: {
         glow: "0 20px 45px -20px rgba(20, 83, 45, 0.3)",
-        soft: "0 18px 40px -28px rgba(13, 27, 42, 0.5)"
+        soft: "0 18px 40px -28px rgba(5, 17, 10, 0.7)"
       }
     }
   },
