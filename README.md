@@ -29,3 +29,6 @@ npm run build
 A PR triggers typechecking, tests, and a Vite build without deploying. Merging into `main` triggers the same checks and GitHub Pages deployment through `.github/workflows/pages.yml`.
 
 The contact form uses the existing Formspree endpoint. For production, verify the endpoint in Formspree and test a real submission.
+
+## Reviewing a PR
+The workflow uploads a downloadable `portfolio-preview-dist` artifact for pull requests. After testing the build, work through [manual QA](docs/MANUAL_QA.md). The PR does **not** deploy automatically.

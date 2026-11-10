@@ -32,6 +32,13 @@ jobs:
         run: npm run check
       - name: Build
         run: npm run build
+      - name: Upload PR preview build
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: portfolio-preview-dist
+          path: dist
+          retention-days: 7
       - name: Upload artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
