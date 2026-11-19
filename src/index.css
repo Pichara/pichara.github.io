@@ -249,3 +249,43 @@ img { display: block; max-width: 100%; }
   .matrix-rain { display: none; }
   .motion-ready [data-reveal] { opacity: 1; transform: none; }
 }
+
+/* Pichara Studio — route-level states (rendered outside .studio-root, so
+   they live here in the main bundle and apply even if the editor chunk
+   fails to load). */
+.studio-loading {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.studio-error {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  color: #e5e7eb;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.studio-error h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.studio-error p {
+  margin: 0;
+  max-width: 480px;
+  color: #9ca3af;
+}
+
+.studio-error a {
+  color: #4ade80;
+}

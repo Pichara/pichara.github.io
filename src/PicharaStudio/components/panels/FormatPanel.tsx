@@ -12,6 +12,7 @@
  */
 
 import { useCallback, useRef } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useDiagramStore } from "../../stores/diagramStore";
 import { DEFAULT_EDGE_STYLE, DEFAULT_NODE_STYLE } from "../../constants";
 import {
@@ -89,11 +90,19 @@ function SelectField({ label, value, options, onChange }: SelectFieldProps) {
 }
 
 export default function FormatPanel() {
-  const selectedNodes = useDiagramStore((state) =>
-    state.diagram.nodes.filter((node) => node.selected)
+  // These selectors build new arrays, so useShallow keeps the snapshot
+  // referentially stable: without it, Zustand v5's useSyncExternalStore
+  // sees a new snapshot on every render and re-renders in a loop until
+  // React aborts with "Maximum update depth exceeded" (black /diagram).
+  const selectedNodes = useDiagramStore(
+    useShallow((state) =>
+      state.diagram.nodes.filter((node) => node.selected)
+    )
   );
-  const selectedEdges = useDiagramStore((state) =>
-    state.diagram.edges.filter((edge) => edge.selected)
+  const selectedEdges = useDiagramStore(
+    useShallow((state) =>
+      state.diagram.edges.filter((edge) => edge.selected)
+    )
   );
   const beginStyleEdit = useDiagramStore((state) => state.beginStyleEdit);
   const updateSelectedNodeStyle = useDiagramStore(
