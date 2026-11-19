@@ -1,0 +1,282 @@
+/**
+ * FormatPanel — side formatting panel (right side of the editor).
+ *
+ * Shows controls for the current selection: fill/border/text for shapes,
+ * line color/width/style for connections. With nothing selected it shows
+ * a hint instead. Every control applies to all selected elements at once.
+ *
+ * Undo/redo: discrete controls (selects, checkbox) record one undo step
+ * per change. Color pickers fire many changes per drag, so the first
+ * change of a focus session records the step (`beginStyleEdit`) and the
+ * rest apply without recording — one undo step per color gesture.
+ */
+
+import { useCallback, useRef } from "react";
+import { useDiagramStore } from "../../stores/diagramStore";
+import { DEFAULT_EDGE_STYLE, DEFAULT_NODE_STYLE } from "../../constants";
+import {
+  asHexColor,
+  resolveEdgeStyle,
+  resolveNodeStyle,
+} from "../../utils/apply-style";
+import type { EdgeStyle, NodeStyle } from "../../types";
+
+const BORDER_WIDTHS = [1, 2, 3, 4];
+const FONT_SIZES = [12, 14, 16, 18, 20];
+const FONT_WEIGHTS = [
+  { value: "400", label: "Regular" },
+  { value: "500", label: "Medium" },
+  { value: "600", label: "Semibold" },
+  { value: "700", label: "Bold" },
+];
+const EDGE_WIDTHS = [1, 1.5, 2, 3, 4];
+const EDGE_DASHES = [
+  { value: "", label: "Solid" },
+  { value: "6,4", label: "Dashed" },
+  { value: "2,4", label: "Dotted" },
+];
+
+interface ColorFieldProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+}
+
+function ColorField({ label, value, onChange, onBlur }: ColorFieldProps) {
+  return (
+    <label className="format-panel__field">
+      <span className="format-panel__label">{label}</span>
+      <span className="format-panel__color-row">
+        <input
+          type="color"
+          className="format-panel__color-input"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onBlur={onBlur}
+          aria-label={label}
+        />
+        <code className="format-panel__color-value">{value}</code>
+      </span>
+    </label>
+  );
+}
+
+interface SelectFieldProps {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}
+
+function SelectField({ label, value, options, onChange }: SelectFieldProps) {
+  return (
+    <label className="format-panel__field">
+      <span className="format-panel__label">{label}</span>
+      <select
+        className="format-panel__select"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+export default function FormatPanel() {
+  const selectedNodes = useDiagramStore((state) =>
+    state.diagram.nodes.filter((node) => node.selected)
+  );
+  const selectedEdges = useDiagramStore((state) =>
+    state.diagram.edges.filter((edge) => edge.selected)
+  );
+  const beginStyleEdit = useDiagramStore((state) => state.beginStyleEdit);
+  const updateSelectedNodeStyle = useDiagramStore(
+    (state) => state.updateSelectedNodeStyle
+  );
+  const updateSelectedEdgeStyle = useDiagramStore(
+    (state) => state.updateSelectedEdgeStyle
+  );
+  const resetSelectedStyle = useDiagramStore(
+    (state) => state.resetSelectedStyle
+  );
+
+  // True while a color picker drag is in progress: the first change of
+  // the drag records the undo step, later changes only apply the style.
+  const colorEditActive = useRef(false);
+
+  const applyNodeColor = useCallback(
+    (patch: Partial<NodeStyle>) => {
+      if (!colorEditActive.current) {
+        beginStyleEdit();
+        colorEditActive.current = true;
+      }
+      updateSelectedNodeStyle(patch, false);
+    },
+    [beginStyleEdit, updateSelectedNodeStyle]
+  );
+
+  const applyEdgeColor = useCallback(
+    (patch: Partial<EdgeStyle>) => {
+      if (!colorEditActive.current) {
+        beginStyleEdit();
+        colorEditActive.current = true;
+      }
+      updateSelectedEdgeStyle(patch, false);
+    },
+    [beginStyleEdit, updateSelectedEdgeStyle]
+  );
+
+  const endColorEdit = useCallback(() => {
+    colorEditActive.current = false;
+  }, []);
+
+  // With a multi-selection the panel shows (and edits from) the first
+  // element's values; applying a control updates every selected element.
+  const nodeStyle = resolveNodeStyle(selectedNodes[0]?.data.style);
+  const edgeStyle = resolveEdgeStyle(selectedEdges[0]?.data?.style);
+  const hasSelection =
+    selectedNodes.length > 0 || selectedEdges.length > 0;
+
+  return (
+    <aside className="format-panel" aria-label="Format">
+      <h2 className="format-panel__title">Format</h2>
+
+      {!hasSelection ? (
+        <p className="format-panel__hint">
+          Select a shape or a connection to format it.
+        </p>
+      ) : null}
+
+      {selectedNodes.length > 0 ? (
+        <section aria-label="Shape formatting">
+          <h3 className="format-panel__section-title">
+            {selectedNodes.length === 1
+              ? "Shape"
+              : `Shapes (${selectedNodes.length})`}
+          </h3>
+          <ColorField
+            label="Fill"
+            value={asHexColor(
+              nodeStyle.backgroundColor,
+              DEFAULT_NODE_STYLE.backgroundColor
+            )}
+            onChange={(value) => applyNodeColor({ backgroundColor: value })}
+            onBlur={endColorEdit}
+          />
+          <ColorField
+            label="Border"
+            value={asHexColor(
+              nodeStyle.borderColor,
+              DEFAULT_NODE_STYLE.borderColor
+            )}
+            onChange={(value) => applyNodeColor({ borderColor: value })}
+            onBlur={endColorEdit}
+          />
+          <SelectField
+            label="Border width"
+            value={String(nodeStyle.borderWidth)}
+            options={BORDER_WIDTHS.map((width) => ({
+              value: String(width),
+              label: `${width} px`,
+            }))}
+            onChange={(value) =>
+              updateSelectedNodeStyle({ borderWidth: Number(value) })
+            }
+          />
+          <ColorField
+            label="Text"
+            value={asHexColor(
+              nodeStyle.textColor,
+              DEFAULT_NODE_STYLE.textColor
+            )}
+            onChange={(value) => applyNodeColor({ textColor: value })}
+            onBlur={endColorEdit}
+          />
+          <SelectField
+            label="Font size"
+            value={String(nodeStyle.fontSize)}
+            options={FONT_SIZES.map((size) => ({
+              value: String(size),
+              label: `${size} px`,
+            }))}
+            onChange={(value) =>
+              updateSelectedNodeStyle({ fontSize: Number(value) })
+            }
+          />
+          <SelectField
+            label="Font weight"
+            value={nodeStyle.fontWeight}
+            options={FONT_WEIGHTS}
+            onChange={(value) =>
+              updateSelectedNodeStyle({ fontWeight: value })
+            }
+          />
+        </section>
+      ) : null}
+
+      {selectedEdges.length > 0 ? (
+        <section aria-label="Connection formatting">
+          <h3 className="format-panel__section-title">
+            {selectedEdges.length === 1
+              ? "Connection"
+              : `Connections (${selectedEdges.length})`}
+          </h3>
+          <ColorField
+            label="Line"
+            value={asHexColor(
+              edgeStyle.strokeColor,
+              DEFAULT_EDGE_STYLE.strokeColor
+            )}
+            onChange={(value) => applyEdgeColor({ strokeColor: value })}
+            onBlur={endColorEdit}
+          />
+          <SelectField
+            label="Line width"
+            value={String(edgeStyle.strokeWidth)}
+            options={EDGE_WIDTHS.map((width) => ({
+              value: String(width),
+              label: `${width} px`,
+            }))}
+            onChange={(value) =>
+              updateSelectedEdgeStyle({ strokeWidth: Number(value) })
+            }
+          />
+          <SelectField
+            label="Line style"
+            value={edgeStyle.strokeDasharray}
+            options={EDGE_DASHES}
+            onChange={(value) =>
+              updateSelectedEdgeStyle({ strokeDasharray: value })
+            }
+          />
+          <label className="format-panel__check">
+            <input
+              type="checkbox"
+              checked={edgeStyle.animated}
+              onChange={(event) =>
+                updateSelectedEdgeStyle({ animated: event.target.checked })
+              }
+            />
+            Animated flow
+          </label>
+        </section>
+      ) : null}
+
+      {hasSelection ? (
+        <button
+          type="button"
+          className="studio-button format-panel__reset"
+          onClick={resetSelectedStyle}
+        >
+          Reset style
+        </button>
+      ) : null}
+    </aside>
+  );
+}

@@ -27,11 +27,19 @@ import type {
   Diagram,
   DiagramEdge,
   DiagramNode,
+  EdgeStyle,
+  NodeStyle,
   ShapeKind,
   Viewport,
 } from "../types";
 import { DEFAULT_VIEWPORT, createDefaultMetadata } from "../constants";
 import { generateId } from "../utils/generate-id";
+import {
+  applyEdgeStyle,
+  applyNodeStyle,
+  clearEdgeStyle,
+  clearNodeStyle,
+} from "../utils/apply-style";
 import { useHistoryStore } from "./historyStore";
 
 /**
@@ -87,6 +95,35 @@ interface DiagramStore {
 
   /** Persist the camera position/zoom after a pan or zoom ends. */
   setViewport: (viewport: Viewport) => void;
+
+  /**
+   * Record the current diagram as one undo step. Call before a gesture
+   * that applies many small changes (e.g. dragging a color picker), so
+   * the whole gesture undoes in one step instead of one per change.
+   */
+  beginStyleEdit: () => void;
+
+  /**
+   * Merge a style patch into every selected node. Records one undo step
+   * unless `recordHistory` is false (used with `beginStyleEdit` for
+   * continuous controls such as color pickers).
+   */
+  updateSelectedNodeStyle: (
+    patch: Partial<NodeStyle>,
+    recordHistory?: boolean
+  ) => void;
+
+  /**
+   * Merge a style patch into every selected edge. Records one undo step
+   * unless `recordHistory` is false (see `updateSelectedNodeStyle`).
+   */
+  updateSelectedEdgeStyle: (
+    patch: Partial<EdgeStyle>,
+    recordHistory?: boolean
+  ) => void;
+
+  /** Remove style overrides from every selected node and edge (back to defaults). */
+  resetSelectedStyle: () => void;
 
   /** Replace the current diagram with a loaded one. */
   loadDiagram: (diagram: Diagram) => void;
@@ -171,6 +208,58 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     set((state) => ({
       diagram: { ...state.diagram, viewport },
     })),
+
+  beginStyleEdit: () => {
+    recordHistory(get().diagram);
+  },
+
+  updateSelectedNodeStyle: (patch, record = true) => {
+    const { diagram } = get();
+    if (!diagram.nodes.some((node) => node.selected)) return;
+    if (record) recordHistory(diagram);
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        nodes: state.diagram.nodes.map((node) =>
+          node.selected ? applyNodeStyle(node, patch) : node
+        ),
+      },
+    }));
+  },
+
+  updateSelectedEdgeStyle: (patch, record = true) => {
+    const { diagram } = get();
+    if (!diagram.edges.some((edge) => edge.selected)) return;
+    if (record) recordHistory(diagram);
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        edges: state.diagram.edges.map((edge) =>
+          edge.selected ? applyEdgeStyle(edge, patch) : edge
+        ),
+      },
+    }));
+  },
+
+  resetSelectedStyle: () => {
+    const { diagram } = get();
+    const hasSelection =
+      diagram.nodes.some((node) => node.selected) ||
+      diagram.edges.some((edge) => edge.selected);
+    if (!hasSelection) return;
+    recordHistory(diagram);
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        nodes: state.diagram.nodes.map((node) =>
+          node.selected ? clearNodeStyle(node) : node
+        ),
+        edges: state.diagram.edges.map((edge) =>
+          edge.selected ? clearEdgeStyle(edge) : edge
+        ),
+      },
+    }));
+  },
 
   loadDiagram: (diagram) => {
     // A different diagram replaces the current one: past undo steps from

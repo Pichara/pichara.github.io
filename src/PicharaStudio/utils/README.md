@@ -8,6 +8,9 @@ These functions have **no dependencies** on React, Zustand, React Flow, or the D
 
 | Utility | Purpose |
 |---|---|
+| `applyNodeStyle(node, patch)` / `applyEdgeStyle(edge, patch)` | Merge style overrides into a node/edge immutably (`apply-style.ts`) |
+| `resolveNodeStyle(style)` / `resolveEdgeStyle(style)` | Fill missing style fields from the defaults (`apply-style.ts`) |
+| `edgePresentation(edge)` | Translate an edge's domain style into React Flow props (`apply-style.ts`) |
 | `generateId()` | Generate unique IDs for nodes, edges, and diagrams (`crypto.randomUUID()`) |
 | `clamp(value, min, max)` | Clamp a number within a range |
 | `snapToGrid(position, gridSize)` | Snap a position to the nearest grid point |

@@ -8,6 +8,7 @@
 
 import Toolbar from "./toolbar/Toolbar";
 import DiagramCanvas from "./canvas/DiagramCanvas";
+import FormatPanel from "./panels/FormatPanel";
 import StatusBar from "./status-bar/StatusBar";
 import { useDiagramPersistence } from "../hooks/useDiagramPersistence";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
@@ -21,7 +22,10 @@ export default function DiagramStudio() {
     <div className="studio-root">
       <Toolbar saveFailed={saveFailed} />
       <main className="studio-main">
-        <DiagramCanvas />
+        <div className="studio-main__canvas">
+          <DiagramCanvas />
+        </div>
+        <FormatPanel />
       </main>
       <StatusBar />
     </div>
