@@ -41,6 +41,18 @@ import {
   clearNodeStyle,
 } from "../utils/apply-style";
 import { useHistoryStore } from "./historyStore";
+import {
+  alignNodes,
+  cloneSelection,
+  distributeNodes,
+  snapshotSelection,
+  type AlignKind,
+  type DistributeAxis,
+  type SelectionSnapshot,
+} from "../utils/selection-ops";
+
+/** Offset (px) applied to each paste so repeated pastes cascade. */
+const PASTE_OFFSET = 20;
 
 /**
  * True while a node resize is in progress. Module-scoped (not store state):
@@ -85,6 +97,50 @@ interface DiagramStore {
    * Ephemeral UI state — not part of the diagram, never persisted.
    */
   spawnOffset: number;
+
+  /**
+   * Last copied selection (deep copies of nodes + internal edges).
+   * Ephemeral UI state — not part of the diagram, never persisted.
+   * `null` when nothing has been copied yet.
+   */
+  clipboard: SelectionSnapshot | null;
+
+  /**
+   * How many times the current clipboard has been pasted. Each paste
+   * shifts the clones a bit further so repeated pastes cascade instead
+   * of stacking exactly on top of each other. Reset by copying.
+   */
+  pasteCount: number;
+
+  /** Copy the selected nodes (and edges between them) to the clipboard. */
+  copySelection: () => void;
+
+  /**
+   * Paste the clipboard as fresh nodes/edges, offset so they do not land
+   * exactly on the originals, and select the pasted copies. No-op when
+   * the clipboard is empty. Records one undo step.
+   */
+  pasteClipboard: () => void;
+
+  /**
+   * Duplicate the selection in place: same as copy + paste, offset by
+   * one paste step, without touching the clipboard. Records one undo step.
+   */
+  duplicateSelection: () => void;
+
+  /**
+   * Line the selected nodes up with each other (left, center, right,
+   * top, middle, bottom). No-op with fewer than two nodes selected.
+   * Records one undo step.
+   */
+  alignSelection: (kind: AlignKind) => void;
+
+  /**
+   * Space the selected nodes evenly along an axis. The outermost nodes
+   * stay put; the ones between get evenly spaced centers. No-op with
+   * fewer than three nodes selected. Records one undo step.
+   */
+  distributeSelection: (axis: DistributeAxis) => void;
 
   /** Add a base-shape node at the given canvas position. */
   addNode: (
@@ -156,6 +212,111 @@ interface DiagramStore {
 export const useDiagramStore = create<DiagramStore>()((set, get) => ({
   diagram: createEmptyDiagram(),
   spawnOffset: 0,
+  clipboard: null,
+  pasteCount: 0,
+
+  copySelection: () => {
+    const { diagram } = get();
+    if (!diagram.nodes.some((node) => node.selected)) return;
+    set({
+      clipboard: snapshotSelection(diagram.nodes, diagram.edges),
+      pasteCount: 0,
+    });
+  },
+
+  pasteClipboard: () => {
+    const { diagram, clipboard, pasteCount } = get();
+    if (clipboard === null) return;
+    const clones = cloneSelection(
+      clipboard,
+      PASTE_OFFSET * (pasteCount + 1),
+      () => generateId()
+    );
+    recordHistory(diagram);
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        nodes: [
+          ...state.diagram.nodes.map((node) => ({
+            ...node,
+            selected: false,
+          })),
+          ...clones.nodes,
+        ],
+        edges: [
+          ...state.diagram.edges.map((edge) => ({
+            ...edge,
+            selected: false,
+          })),
+          ...clones.edges,
+        ],
+      },
+      pasteCount: state.pasteCount + 1,
+    }));
+  },
+
+  duplicateSelection: () => {
+    const { diagram } = get();
+    const snapshot = snapshotSelection(diagram.nodes, diagram.edges);
+    if (snapshot.nodes.length === 0) return;
+    const clones = cloneSelection(snapshot, PASTE_OFFSET, () => generateId());
+    recordHistory(diagram);
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        nodes: [
+          ...state.diagram.nodes.map((node) => ({
+            ...node,
+            selected: false,
+          })),
+          ...clones.nodes,
+        ],
+        edges: [
+          ...state.diagram.edges.map((edge) => ({
+            ...edge,
+            selected: false,
+          })),
+          ...clones.edges,
+        ],
+      },
+    }));
+  },
+
+  alignSelection: (kind) => {
+    const { diagram } = get();
+    const selected = diagram.nodes.filter((node) => node.selected);
+    const moves = alignNodes(selected, kind);
+    if (moves.length === 0) return;
+    const positions = new Map(moves.map((move) => [move.id, move.position]));
+    recordHistory(diagram);
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        nodes: state.diagram.nodes.map((node) => {
+          const position = positions.get(node.id);
+          return position === undefined ? node : { ...node, position };
+        }),
+      },
+    }));
+  },
+
+  distributeSelection: (axis) => {
+    const { diagram } = get();
+    const selected = diagram.nodes.filter((node) => node.selected);
+    const moves = distributeNodes(selected, axis);
+    if (moves.length === 0) return;
+    const positions = new Map(moves.map((move) => [move.id, move.position]));
+    recordHistory(diagram);
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        nodes: state.diagram.nodes.map((node) => {
+          const position = positions.get(node.id);
+          return position === undefined ? node : { ...node, position };
+        }),
+      },
+    }));
+  },
 
   addNode: (shape, position) => {
     recordHistory(get().diagram);
@@ -344,11 +505,16 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     // A different diagram replaces the current one: past undo steps from
     // the old diagram must not leak into the new one.
     useHistoryStore.getState().clearHistory();
-    set({ diagram, spawnOffset: 0 });
+    set({ diagram, spawnOffset: 0, clipboard: null, pasteCount: 0 });
   },
 
   newDiagram: () => {
     useHistoryStore.getState().clearHistory();
-    set({ diagram: createEmptyDiagram(), spawnOffset: 0 });
+    set({
+      diagram: createEmptyDiagram(),
+      spawnOffset: 0,
+      clipboard: null,
+      pasteCount: 0,
+    });
   },
 }));

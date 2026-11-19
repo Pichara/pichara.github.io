@@ -240,6 +240,22 @@
   align-self: flex-start;
 }
 
+.format-panel__arrange-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.format-panel__arrange-grid--two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.format-panel__arrange-button {
+  padding: 5px 4px;
+  font-size: 12px;
+  text-align: center;
+}
+
 /* --- Toolbar --- */
 
 .studio-toolbar {
@@ -293,6 +309,11 @@
   display: flex;
   gap: 8px;
   margin-left: auto;
+}
+
+.studio-toolbar__clipboard {
+  display: flex;
+  gap: 8px;
 }
 
 .studio-toolbar__export {

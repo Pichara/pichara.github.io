@@ -28,6 +28,15 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
   const loadDiagram = useDiagramStore((state) => state.loadDiagram);
   const newDiagram = useDiagramStore((state) => state.newDiagram);
   const diagramName = useDiagramStore((state) => state.diagram.name);
+  const copySelection = useDiagramStore((state) => state.copySelection);
+  const pasteClipboard = useDiagramStore((state) => state.pasteClipboard);
+  const duplicateSelection = useDiagramStore(
+    (state) => state.duplicateSelection
+  );
+  const hasNodeSelection = useDiagramStore((state) =>
+    state.diagram.nodes.some((node) => node.selected)
+  );
+  const hasClipboard = useDiagramStore((state) => state.clipboard !== null);
   const undo = useHistoryStore((state) => state.undo);
   const redo = useHistoryStore((state) => state.redo);
   const canUndo = useHistoryStore((state) => state.past.length > 0);
@@ -131,6 +140,42 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
           aria-label="Redo"
         >
           ↪ Redo
+        </button>
+      </div>
+      <div
+        className="studio-toolbar__clipboard"
+        role="group"
+        aria-label="Copy, paste and duplicate"
+      >
+        <button
+          type="button"
+          className="studio-button"
+          onClick={copySelection}
+          disabled={!hasNodeSelection}
+          title="Copy selection (Ctrl+C)"
+          aria-label="Copy selection"
+        >
+          Copy
+        </button>
+        <button
+          type="button"
+          className="studio-button"
+          onClick={pasteClipboard}
+          disabled={!hasClipboard}
+          title="Paste (Ctrl+V)"
+          aria-label="Paste"
+        >
+          Paste
+        </button>
+        <button
+          type="button"
+          className="studio-button"
+          onClick={duplicateSelection}
+          disabled={!hasNodeSelection}
+          title="Duplicate selection (Ctrl+D)"
+          aria-label="Duplicate selection"
+        >
+          Duplicate
         </button>
       </div>
       <div

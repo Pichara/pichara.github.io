@@ -3,6 +3,9 @@
  *
  * - Ctrl/Cmd+Z: undo
  * - Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y: redo
+ * - Ctrl/Cmd+C: copy the selection
+ * - Ctrl/Cmd+V: paste the clipboard
+ * - Ctrl/Cmd+D: duplicate the selection
  *
  * Shortcuts are ignored while typing in an editable element (input,
  * textarea, select, contenteditable) so text editing keeps its native
@@ -11,6 +14,7 @@
  */
 
 import { useEffect } from "react";
+import { useDiagramStore } from "../stores/diagramStore";
 import { useHistoryStore } from "../stores/historyStore";
 
 /** True when the key event target accepts text input. */
@@ -33,6 +37,17 @@ export function useKeyboardShortcuts(): void {
       } else if ((key === "z" && event.shiftKey) || key === "y") {
         event.preventDefault();
         useHistoryStore.getState().redo();
+      } else if (key === "c") {
+        event.preventDefault();
+        useDiagramStore.getState().copySelection();
+      } else if (key === "v") {
+        event.preventDefault();
+        useDiagramStore.getState().pasteClipboard();
+      } else if (key === "d") {
+        // Ctrl+D would bookmark the page in the browser; the editor
+        // claims it for duplicating the selection instead.
+        event.preventDefault();
+        useDiagramStore.getState().duplicateSelection();
       }
     };
 

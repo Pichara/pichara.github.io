@@ -152,6 +152,10 @@ export default function FormatPanel() {
   const resetSelectedStyle = useDiagramStore(
     (state) => state.resetSelectedStyle
   );
+  const alignSelection = useDiagramStore((state) => state.alignSelection);
+  const distributeSelection = useDiagramStore(
+    (state) => state.distributeSelection
+  );
 
   // True while a color picker drag is in progress: the first change of
   // the drag records the undo step, later changes only apply the style.
@@ -336,6 +340,90 @@ export default function FormatPanel() {
             />
             Arrowhead
           </label>
+        </section>
+      ) : null}
+
+      {selectedNodes.length >= 2 ? (
+        <section aria-label="Arrange">
+          <h3 className="format-panel__section-title">Arrange</h3>
+          <div
+            className="format-panel__arrange-grid"
+            role="group"
+            aria-label="Align"
+          >
+            <button
+              type="button"
+              className="studio-button format-panel__arrange-button"
+              onClick={() => alignSelection("left")}
+              title="Align left edges"
+            >
+              ⇤ Left
+            </button>
+            <button
+              type="button"
+              className="studio-button format-panel__arrange-button"
+              onClick={() => alignSelection("center-x")}
+              title="Align horizontal centers"
+            >
+              ↔ Center
+            </button>
+            <button
+              type="button"
+              className="studio-button format-panel__arrange-button"
+              onClick={() => alignSelection("right")}
+              title="Align right edges"
+            >
+              Right ⇥
+            </button>
+            <button
+              type="button"
+              className="studio-button format-panel__arrange-button"
+              onClick={() => alignSelection("top")}
+              title="Align top edges"
+            >
+              ⇧ Top
+            </button>
+            <button
+              type="button"
+              className="studio-button format-panel__arrange-button"
+              onClick={() => alignSelection("center-y")}
+              title="Align vertical centers"
+            >
+              ↕ Middle
+            </button>
+            <button
+              type="button"
+              className="studio-button format-panel__arrange-button"
+              onClick={() => alignSelection("bottom")}
+              title="Align bottom edges"
+            >
+              Bottom ⇩
+            </button>
+          </div>
+          <div
+            className="format-panel__arrange-grid format-panel__arrange-grid--two"
+            role="group"
+            aria-label="Distribute"
+          >
+            <button
+              type="button"
+              className="studio-button format-panel__arrange-button"
+              onClick={() => distributeSelection("horizontal")}
+              disabled={selectedNodes.length < 3}
+              title="Space evenly left to right (needs 3+ shapes)"
+            >
+              Distribute ⇄
+            </button>
+            <button
+              type="button"
+              className="studio-button format-panel__arrange-button"
+              onClick={() => distributeSelection("vertical")}
+              disabled={selectedNodes.length < 3}
+              title="Space evenly top to bottom (needs 3+ shapes)"
+            >
+              Distribute ⇅
+            </button>
+          </div>
         </section>
       ) : null}
 
