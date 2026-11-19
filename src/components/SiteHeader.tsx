@@ -1,11 +1,15 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { profile } from "../data";
 
-const links = [
+type NavLink = { href: string; label: string } | { to: string; label: string };
+
+const links: NavLink[] = [
   { href: "#about", label: "About" },
   { href: "#experience", label: "Experience" },
   { href: "#projects", label: "Projects" },
   { href: "#contact", label: "Contact" },
+  { to: "/diagram", label: "Studio" },
 ];
 
 type Props = {
@@ -24,11 +28,17 @@ export default function SiteHeader({ rainEnabled, onToggleRain }: Props) {
           <span>PICHARA<span className="accent">.</span>DEV</span>
         </a>
         <nav className={`site-nav ${menuOpen ? "is-open" : ""}`} id="primary-navigation" aria-label="Primary">
-          {links.map((link) => (
-            <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
-              {link.label}
-            </a>
-          ))}
+          {links.map((link) =>
+            "to" in link ? (
+              <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)}>
+                {link.label}
+              </Link>
+            ) : (
+              <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+                {link.label}
+              </a>
+            )
+          )}
           <button type="button" className="rain-toggle" aria-pressed={rainEnabled} onClick={onToggleRain} title="Toggle Matrix rain animation">
             <span className={`indicator ${rainEnabled ? "on" : ""}`} aria-hidden="true" />
             Rain {rainEnabled ? "ON" : "OFF"}

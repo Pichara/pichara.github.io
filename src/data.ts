@@ -1,3 +1,4 @@
+import diagramStudio from "./assets/project-diagram-studio.svg";
 import vidaViva from "./assets/project-vida-viva.svg";
 import autoHighlights from "./assets/project-autohighlights.svg";
 import lanMessaging from "./assets/project-lan.svg";
@@ -109,7 +110,26 @@ export const timeline = [
   }
 ];
 
-export const projects = [
+export type Project = {
+  name: string;
+  description: string;
+  stack: string[];
+  link: string;
+  image: string;
+  /** True when `link` is an internal app route (same tab, no target _blank). */
+  internal?: boolean;
+};
+
+export const projects: Project[] = [
+  {
+    name: "Pichara Diagram Studio",
+    description:
+      "Browser-based diagram editor in the Lucidchart / draw.io style. Flowcharts, architecture and UML diagrams that run 100% in the browser — no backend, no account.",
+    stack: ["React", "TypeScript", "React Flow"],
+    link: "/diagram",
+    image: diagramStudio,
+    internal: true
+  },
   {
     name: "Sistema VidaViva",
     description:
