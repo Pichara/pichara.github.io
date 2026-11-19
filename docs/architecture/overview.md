@@ -187,14 +187,26 @@ flowchart LR
 
 ## Routing Strategy
 
-The application will use `react-router-dom` with `HashRouter` for GitHub Pages compatibility:
+The application uses `react-router-dom` with `BrowserRouter` plus the
+`404.html` redirect strategy for GitHub Pages compatibility:
 
 | Path | Component | Description |
 |---|---|---|
 | `/` | `App` (portfolio) | Existing portfolio site |
 | `/diagram` | `DiagramStudio` (lazy loaded) | Diagram editor application |
 
-`HashRouter` is chosen over `BrowserRouter` because GitHub Pages does not support server-side URL rewriting. With `HashRouter`, the URL becomes `https://pichara.github.io/#/diagram`, which works without any server configuration.
+`BrowserRouter` is chosen over `HashRouter` because the portfolio navigates
+between sections with hash anchors (`#home`, `#projects`, `#contact`).
+`HashRouter` would hijack those hashes as route paths and break in-page
+navigation. With `BrowserRouter`, plain `<a href="#...">` anchors keep
+working untouched.
+
+Direct navigation and refresh on `/diagram` work through the
+[spa-github-pages](https://github.com/rafrex/spa-github-pages) redirect:
+`public/404.html` encodes the requested path into the query string
+(`/?/diagram`) and the decode script in `index.html` restores it with
+`history.replaceState` before the app boots, so the router sees the real
+path. No server configuration is needed.
 
 ## Technology Rationale
 

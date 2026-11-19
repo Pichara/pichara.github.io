@@ -134,9 +134,9 @@ The diagram editor is a **self-contained feature module** under `src/PicharaStud
 
 | Technology | Purpose | Status |
 |---|---|---|
-| @xyflow/react (React Flow) | Diagram canvas rendering engine | To be installed at implementation start |
-| zustand | Lightweight state management for editor | To be installed at implementation start |
-| react-router-dom | Client-side routing (portfolio `/` + editor `/diagram`) | To be installed at implementation start |
+| @xyflow/react (React Flow) | Diagram canvas rendering engine | Installed (Milestone 1) — `^13.0.2` |
+| zustand | Lightweight state management for editor | Installed (Milestone 1) — `^5.1.0` |
+| react-router-dom | Client-side routing (portfolio `/` + editor `/diagram`) | Installed (Milestone 1) — `^7.18.6` |
 | lucide-react | Icon library for toolbar and UI | To be evaluated |
 | elkjs | Automatic graph layout algorithms | To be evaluated when needed |
 | html-to-image | PNG export from canvas | To be evaluated when needed |
@@ -262,7 +262,11 @@ The diagram editor is a **self-contained feature module** under `src/PicharaStud
 
 - **Base path:** Vite is configured with `base: "/"`. The site is served at `https://pichara.github.io/`.
 - **Static hosting:** GitHub Pages serves static files only. No server-side routing, no redirects, no rewrites.
-- **SPA routing:** When using `react-router-dom`, configure a `404.html` redirect strategy for GitHub Pages so that direct navigation to `/diagram` works. See the development guide for details.
+- **SPA routing:** The app uses `BrowserRouter` (see `docs/architecture/overview.md`
+  for why `HashRouter` was rejected — the portfolio uses hash anchors). Direct
+  navigation to `/diagram` works through the `public/404.html` redirect
+  strategy: `404.html` encodes the path as `/?/diagram` and the decode script
+  in `index.html` restores it before the app boots.
 - **Asset paths:** Always use relative paths or Vite's asset resolution. Never hardcode absolute paths that assume a specific base URL.
 - **Build output:** Vite outputs to `dist/`. The GitHub Actions workflow uploads `dist/` as the Pages artifact.
 - **Workflow:** `.github/workflows/pages.yml` runs `npm run check` (typecheck + tests) and `npm run build`. **Never modify this workflow without explicit justification.**

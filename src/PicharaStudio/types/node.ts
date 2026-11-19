@@ -64,10 +64,14 @@ export interface NodeStyle {
 /**
  * Base data payload every node carries.
  *
- * Custom node types extend this interface to add domain-specific fields.
+ * Custom node types extend this type to add domain-specific fields.
  * Example: `ServiceNodeData extends BaseNodeData { serviceType: string }`
+ *
+ * Defined as a `type` (not an `interface`) so it stays assignable to
+ * React Flow's `Record<string, unknown>` data constraint — TypeScript
+ * interfaces do not get an implicit index signature.
  */
-export interface BaseNodeData {
+export type BaseNodeData = {
   /** Primary display text. */
   label: string;
 
@@ -76,7 +80,19 @@ export interface BaseNodeData {
 
   /** Visual customization (overrides defaults). */
   style?: NodeStyle;
-}
+};
+
+/** Kinds of base shapes available in the shape library. */
+export type ShapeKind = "rectangle" | "diamond" | "ellipse";
+
+/**
+ * Data payload for base shape nodes (rectangle, diamond, ellipse).
+ * Extends the base payload with the shape discriminator.
+ */
+export type BaseShapeNodeData = BaseNodeData & {
+  /** Which base shape this node renders as. */
+  shape: ShapeKind;
+};
 
 // ---------------------------------------------------------------------------
 // DiagramNode

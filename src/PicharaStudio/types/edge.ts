@@ -39,16 +39,20 @@ export interface EdgeStyle {
 /**
  * Base data payload for edges.
  *
- * Custom edge types extend this interface to add domain-specific fields.
+ * Custom edge types extend this type to add domain-specific fields.
  * Example: `DependencyEdgeData extends BaseEdgeData { dependencyType: string }`
+ *
+ * Defined as a `type` (not an `interface`) so it stays assignable to
+ * React Flow's `Record<string, unknown>` data constraint — TypeScript
+ * interfaces do not get an implicit index signature.
  */
-export interface BaseEdgeData {
+export type BaseEdgeData = {
   /** Text displayed along the edge path. */
   label?: string;
 
   /** Visual customization (overrides defaults). */
   style?: EdgeStyle;
-}
+};
 
 // ---------------------------------------------------------------------------
 // DiagramEdge

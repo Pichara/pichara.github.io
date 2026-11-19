@@ -12,6 +12,8 @@ export type { Diagram, DiagramType } from "./diagram";
 export type {
   DiagramNode,
   BaseNodeData,
+  BaseShapeNodeData,
+  ShapeKind,
   NodePosition,
   NodeDimensions,
   NodeStyle,

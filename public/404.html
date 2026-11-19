@@ -1,0 +1,43 @@
+<!doctype html>
+<!--
+  Single Page Apps for GitHub Pages (https://github.com/rafrex/spa-github-pages)
+  This 404 page redirects unknown paths back to index.html, encoding the
+  requested path in the query string (/?/diagram). The decode script in
+  index.html restores it with history.replaceState before the app boots,
+  so BrowserRouter sees the real path. The site is a user page served at
+  the domain root, so segmentCount is 0.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pichara.io</title>
+    <script>
+      (function () {
+        var segmentCount = 0;
+        var l = window.location;
+        l.replace(
+          l.protocol +
+            "//" +
+            l.hostname +
+            (l.port ? ":" + l.port : "") +
+            l.pathname
+              .split("/")
+              .slice(0, 1 + segmentCount)
+              .join("/") +
+            "/?/" +
+            l.pathname
+              .slice(1)
+              .split("/")
+              .slice(segmentCount)
+              .join("/")
+              .replace(/&/g, "~and~") +
+            (l.search
+              ? "&" + l.search.slice(1).replace(/&/g, "~and~")
+              : "") +
+            l.hash
+        );
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

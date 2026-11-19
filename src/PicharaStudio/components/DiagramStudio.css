@@ -1,0 +1,182 @@
+/* Pichara Studio — scoped styles (neutral, professional editor palette).
+   Independent from the portfolio's dark-green theme. All rules live under
+   .studio-root so they never leak into the portfolio. */
+
+.studio-root {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: #f3f4f6;
+  color: #1f2937;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  overflow: hidden;
+  /* React Flow v13 themes its chrome with CSS light-dark(), which follows
+     the inherited color-scheme. The portfolio root sets dark; force light
+     here so the editor stays on its neutral light palette. */
+  color-scheme: light;
+}
+
+.studio-main {
+  flex: 1;
+  min-height: 0;
+}
+
+.studio-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Toolbar --- */
+
+.studio-toolbar {
+  height: 48px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.studio-toolbar__back {
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.studio-toolbar__back:hover {
+  text-decoration: underline;
+}
+
+.studio-toolbar__title {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.studio-toolbar__diagram-name {
+  font-size: 13px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-toolbar__save-warning {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.studio-toolbar__shapes {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.studio-button {
+  appearance: none;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #1f2937;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.studio-button:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.studio-button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* --- Status bar --- */
+
+.studio-status-bar {
+  height: 28px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.studio-status-bar__spacer {
+  flex: 1;
+}
+
+/* --- Base shape nodes --- */
+
+.shape-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.shape-node__bg {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+}
+
+.shape-node--rectangle .shape-node__bg {
+  border-radius: 8px;
+}
+
+.shape-node--ellipse .shape-node__bg {
+  border-radius: 50%;
+}
+
+.shape-node--diamond .shape-node__bg {
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.shape-node__content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 14px;
+}
+
+.shape-node__label {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.shape-node__description {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.shape-node.is-selected .shape-node__bg {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+}

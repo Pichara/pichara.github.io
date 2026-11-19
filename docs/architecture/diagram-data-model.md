@@ -86,12 +86,16 @@ interface NodePosition {
 Minimum data payload every node carries. Custom node types extend this interface.
 
 ```typescript
-interface BaseNodeData {
+type BaseNodeData = {
   label: string;          // Primary display text
   description?: string;   // Secondary descriptive text
   style?: NodeStyle;      // Visual customization
-}
+};
 ```
+
+> Defined as a `type` (not an `interface`) so it stays assignable to React
+> Flow's `Record<string, unknown>` data constraint — TypeScript interfaces do
+> not get an implicit index signature.
 
 ### NodeStyle
 
@@ -132,11 +136,14 @@ interface DiagramEdge<T extends BaseEdgeData = BaseEdgeData> {
 Minimum data payload for edges. Custom edge types extend this.
 
 ```typescript
-interface BaseEdgeData {
+type BaseEdgeData = {
   label?: string;         // Text displayed along the edge
   style?: EdgeStyle;      // Visual customization
-}
+};
 ```
+
+> Defined as a `type` (not an `interface`) for the same React Flow
+> assignability reason as `BaseNodeData`.
 
 ### EdgeStyle
 

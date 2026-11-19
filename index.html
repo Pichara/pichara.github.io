@@ -9,6 +9,27 @@
       content="Rodrigo Pichara Gomes — full-stack software developer creating secure applications, developer tools, and practical AI projects. Explore experience and selected work."
     />
     <meta name="theme-color" content="#030a07" />
+    <!-- Single Page Apps for GitHub Pages (https://github.com/rafrex/spa-github-pages)
+         Restores the path encoded by 404.html (/?/diagram) before the app
+         boots, so BrowserRouter sees the requested route. -->
+    <script>
+      (function (l) {
+        if (l.search[1] === "/") {
+          var decoded = l.search
+            .slice(1)
+            .split("&")
+            .map(function (s) {
+              return s.replace(/~and~/g, "&");
+            })
+            .join("?");
+          window.history.replaceState(
+            null,
+            "",
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
     <meta property="og:title" content="Rodrigo Pichara Gomes | Software Engineer" />
     <meta
       property="og:description"
