@@ -10,6 +10,15 @@
 // ---------------------------------------------------------------------------
 
 /**
+ * How the edge path is drawn between its nodes.
+ *
+ * - "curved": smooth bezier curve (React Flow `default` edge).
+ * - "straight": direct straight line (`straight` edge).
+ * - "orthogonal": right-angle steps (`step` edge).
+ */
+export type EdgeLineType = "curved" | "straight" | "orthogonal";
+
+/**
  * Visual style properties for an edge.
  *
  * All fields are optional — when omitted, the renderer uses defaults
@@ -30,6 +39,12 @@ export interface EdgeStyle {
 
   /** Opacity: 0.0 (transparent) to 1.0 (opaque). */
   opacity?: number;
+
+  /** Path shape between the nodes (curved, straight or orthogonal). */
+  lineType?: EdgeLineType;
+
+  /** Whether to draw an arrowhead at the target end. */
+  arrow?: boolean;
 }
 
 // ---------------------------------------------------------------------------

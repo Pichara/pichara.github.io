@@ -10,12 +10,17 @@
  */
 
 import {
+  MarkerType,
+  type EdgeMarker,
+} from "@xyflow/react";
+import {
   DEFAULT_EDGE_STYLE,
   DEFAULT_NODE_STYLE,
 } from "../constants/defaults.ts";
 import type {
   DiagramEdge,
   DiagramNode,
+  EdgeLineType,
   EdgeStyle,
   NodeStyle,
 } from "../types/index.ts";
@@ -86,8 +91,17 @@ export function clearEdgeStyle(edge: DiagramEdge): DiagramEdge {
 // React Flow presentation
 // ---------------------------------------------------------------------------
 
+/** React Flow edge type key for each domain line type. */
+const LINE_TYPE_TO_FLOW_TYPE: Record<EdgeLineType, string> = {
+  curved: "default",
+  straight: "straight",
+  orthogonal: "step",
+};
+
 /** React Flow props derived from an edge's style overrides. */
 export interface EdgePresentation {
+  /** React Flow edge type key (curved → "default", straight, orthogonal → "step"). */
+  type: string;
   /** Inline SVG style for the edge path. */
   style: {
     stroke: string;
@@ -96,15 +110,28 @@ export interface EdgePresentation {
   };
   /** Whether the edge animates a flow indicator. */
   animated: boolean;
+  /** Arrowhead marker at the target end (omitted when arrows are off). */
+  markerEnd?: EdgeMarker;
+  /** Text rendered along the edge path (omitted when the edge has no label). */
+  label?: string;
+  /** Whether the label gets a background so it stays readable over the line. */
+  labelShowBg: boolean;
+  /** Background fill for the label. */
+  labelBgStyle: { fill: string };
+  /** Padding around the label text, in pixels. */
+  labelBgPadding: [number, number];
 }
 
 /**
  * Translate an edge's domain style into the props React Flow renders.
- * An empty dash pattern is omitted so the edge stays solid.
+ * An empty dash pattern is omitted so the edge stays solid. The label
+ * comes from `data.label`; an empty label renders nothing.
  */
 export function edgePresentation(edge: DiagramEdge): EdgePresentation {
   const style = resolveEdgeStyle(edge.data?.style);
+  const label = edge.data?.label?.trim() ? edge.data.label : undefined;
   return {
+    type: LINE_TYPE_TO_FLOW_TYPE[style.lineType],
     style: {
       stroke: style.strokeColor,
       strokeWidth: style.strokeWidth,
@@ -113,6 +140,18 @@ export function edgePresentation(edge: DiagramEdge): EdgePresentation {
         : {}),
     },
     animated: style.animated,
+    ...(style.arrow
+      ? {
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: style.strokeColor,
+          },
+        }
+      : {}),
+    ...(label ? { label } : {}),
+    labelShowBg: true,
+    labelBgStyle: { fill: "#ffffff" },
+    labelBgPadding: [4, 2],
   };
 }
 

@@ -139,6 +139,13 @@ interface DiagramStore {
    */
   updateNodeLabel: (nodeId: string, label: string) => void;
 
+  /**
+   * Replace the label of every selected edge. Records one undo step.
+   * An empty label clears the label (the edge renders no text).
+   * No-op when no edge is selected or no label actually changes.
+   */
+  updateSelectedEdgeLabel: (label: string) => void;
+
   /** Replace the current diagram with a loaded one. */
   loadDiagram: (diagram: Diagram) => void;
 
@@ -305,6 +312,29 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
           candidate.id === nodeId
             ? { ...candidate, data: { ...candidate.data, label } }
             : candidate
+        ),
+      },
+    }));
+  },
+
+  updateSelectedEdgeLabel: (label) => {
+    const { diagram } = get();
+    const nextLabel = label.trim() ? label : undefined;
+    const selected = diagram.edges.filter((edge) => edge.selected);
+    if (
+      selected.length === 0 ||
+      selected.every((edge) => edge.data?.label === nextLabel)
+    ) {
+      return;
+    }
+    recordHistory(diagram);
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        edges: state.diagram.edges.map((edge) =>
+          edge.selected
+            ? { ...edge, data: { ...edge.data, label: nextLabel } }
+            : edge
         ),
       },
     }));

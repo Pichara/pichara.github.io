@@ -24,6 +24,7 @@ export type {
   DiagramEdge,
   BaseEdgeData,
   EdgeStyle,
+  EdgeLineType,
 } from "./edge";
 
 // Viewport

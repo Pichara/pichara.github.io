@@ -54,6 +54,8 @@ test("resolveEdgeStyle fills missing fields from the defaults", () => {
   assert.equal(resolved.strokeWidth, 3);
   assert.equal(resolved.strokeDasharray, "");
   assert.equal(resolved.animated, false);
+  assert.equal(resolved.lineType, "curved");
+  assert.equal(resolved.arrow, true);
 });
 
 test("applyNodeStyle merges into data.style without mutating the node", () => {
@@ -83,10 +85,15 @@ test("clearNodeStyle and clearEdgeStyle drop overrides but keep the rest", () =>
   assert.equal(clearedEdge.source, "n1");
 });
 
-test("edgePresentation renders defaults as a solid grey line", () => {
+test("edgePresentation renders defaults as a solid grey curved line with an arrow", () => {
   assert.deepEqual(edgePresentation(edge), {
+    type: "default",
     style: { stroke: "#6b7280", strokeWidth: 1.5 },
     animated: false,
+    markerEnd: { type: "arrowclosed", color: "#6b7280" },
+    labelShowBg: true,
+    labelBgStyle: { fill: "#ffffff" },
+    labelBgPadding: [4, 2],
   });
 });
 
@@ -98,8 +105,13 @@ test("edgePresentation maps dash pattern and animation", () => {
     animated: true,
   });
   assert.deepEqual(edgePresentation(styled), {
+    type: "default",
     style: { stroke: "#ff0000", strokeWidth: 2, strokeDasharray: "6,4" },
     animated: true,
+    markerEnd: { type: "arrowclosed", color: "#ff0000" },
+    labelShowBg: true,
+    labelBgStyle: { fill: "#ffffff" },
+    labelBgPadding: [4, 2],
   });
 });
 

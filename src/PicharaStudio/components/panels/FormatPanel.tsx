@@ -20,7 +20,7 @@ import {
   resolveEdgeStyle,
   resolveNodeStyle,
 } from "../../utils/apply-style";
-import type { EdgeStyle, NodeStyle } from "../../types";
+import type { EdgeLineType, EdgeStyle, NodeStyle } from "../../types";
 
 const BORDER_WIDTHS = [1, 2, 3, 4];
 const FONT_SIZES = [12, 14, 16, 18, 20];
@@ -35,6 +35,11 @@ const EDGE_DASHES = [
   { value: "", label: "Solid" },
   { value: "6,4", label: "Dashed" },
   { value: "2,4", label: "Dotted" },
+];
+const EDGE_LINE_TYPES: { value: EdgeLineType; label: string }[] = [
+  { value: "curved", label: "Curved" },
+  { value: "straight", label: "Straight" },
+  { value: "orthogonal", label: "Orthogonal" },
 ];
 
 interface ColorFieldProps {
@@ -59,6 +64,36 @@ function ColorField({ label, value, onChange, onBlur }: ColorFieldProps) {
         />
         <code className="format-panel__color-value">{value}</code>
       </span>
+    </label>
+  );
+}
+
+interface TextFieldProps {
+  label: string;
+  value: string;
+  onCommit: (value: string) => void;
+}
+
+/**
+ * Single-line text field that commits on blur (Enter blurs).
+ * Uncontrolled with `defaultValue` so typing never re-renders the panel
+ * or records history per keystroke; the parent remounts it (via `key`)
+ * when the selection changes.
+ */
+function TextField({ label, value, onCommit }: TextFieldProps) {
+  return (
+    <label className="format-panel__field">
+      <span className="format-panel__label">{label}</span>
+      <input
+        type="text"
+        className="format-panel__text-input"
+        defaultValue={value}
+        onBlur={(event) => onCommit(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") event.currentTarget.blur();
+        }}
+        aria-label={label}
+      />
     </label>
   );
 }
@@ -110,6 +145,9 @@ export default function FormatPanel() {
   );
   const updateSelectedEdgeStyle = useDiagramStore(
     (state) => state.updateSelectedEdgeStyle
+  );
+  const updateSelectedEdgeLabel = useDiagramStore(
+    (state) => state.updateSelectedEdgeLabel
   );
   const resetSelectedStyle = useDiagramStore(
     (state) => state.resetSelectedStyle
@@ -236,6 +274,20 @@ export default function FormatPanel() {
               ? "Connection"
               : `Connections (${selectedEdges.length})`}
           </h3>
+          <TextField
+            key={selectedEdges[0]?.id}
+            label="Label"
+            value={selectedEdges[0]?.data?.label ?? ""}
+            onCommit={(value) => updateSelectedEdgeLabel(value)}
+          />
+          <SelectField
+            label="Line type"
+            value={edgeStyle.lineType}
+            options={EDGE_LINE_TYPES}
+            onChange={(value) =>
+              updateSelectedEdgeStyle({ lineType: value as EdgeLineType })
+            }
+          />
           <ColorField
             label="Line"
             value={asHexColor(
@@ -273,6 +325,16 @@ export default function FormatPanel() {
               }
             />
             Animated flow
+          </label>
+          <label className="format-panel__check">
+            <input
+              type="checkbox"
+              checked={edgeStyle.arrow}
+              onChange={(event) =>
+                updateSelectedEdgeStyle({ arrow: event.target.checked })
+              }
+            />
+            Arrowhead
           </label>
         </section>
       ) : null}

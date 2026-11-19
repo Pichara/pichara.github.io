@@ -205,7 +205,18 @@
   cursor: pointer;
 }
 
+.format-panel__text-input {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2937;
+  padding: 5px 8px;
+  font-size: 13px;
+  width: 100%;
+}
+
 .format-panel__select:focus-visible,
+.format-panel__text-input:focus-visible,
 .format-panel__color-input:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;

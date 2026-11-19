@@ -76,6 +76,8 @@ export const DEFAULT_EDGE_STYLE: Required<EdgeStyle> = {
   strokeDasharray: "",
   animated: false,
   opacity: 1,
+  lineType: "curved",
+  arrow: true,
 };
 
 // ---------------------------------------------------------------------------
