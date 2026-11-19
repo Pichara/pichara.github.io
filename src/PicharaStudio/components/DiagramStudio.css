@@ -81,6 +81,11 @@
   margin-left: auto;
 }
 
+.studio-toolbar__history {
+  display: flex;
+  gap: 8px;
+}
+
 .studio-button {
   appearance: none;
   border: 1px solid #d1d5db;
@@ -98,6 +103,16 @@
 .studio-button:hover {
   background: #f9fafb;
   border-color: #9ca3af;
+}
+
+.studio-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.studio-button:disabled:hover {
+  background: #ffffff;
+  border-color: #d1d5db;
 }
 
 .studio-button:focus-visible {

@@ -36,17 +36,24 @@ Transient editor interface state.
 
 ### History Store (`historyStore.ts`)
 
-Undo/redo stack operating on diagram state snapshots.
+Undo/redo stack operating on diagram state snapshots. Implemented — see
+`utils/history-stack.ts` for the pure stack transitions (unit-tested in
+`tests/history-stack.test.mjs`).
 
 **State shape:**
-- `past: DiagramSnapshot[]` — undo stack
-- `future: DiagramSnapshot[]` — redo stack
+- `past: Diagram[]` — undo stack (full pre-change snapshots, oldest first)
+- `future: Diagram[]` — redo stack
 - Actions: `pushHistory`, `undo`, `redo`, `clearHistory`
 
 **Rules:**
-- Maximum stack depth defined by `MAX_HISTORY_SIZE` constant.
-- Each snapshot is a serialized copy of the diagram store state.
+- Maximum stack depth defined by `MAX_HISTORY_SIZE` constant (50).
+- Each snapshot is the full pre-change `Diagram` (never mutated afterwards).
 - Pushing a new entry clears the redo stack.
+- Recording happens in the diagram store: add node, connect edge, delete
+  node/edge, and one entry per node drag. Selection and viewport changes
+  are not recorded. Loading a diagram or starting a new one clears history.
+- Keyboard: `useKeyboardShortcuts` maps Ctrl/Cmd+Z to undo and
+  Ctrl/Cmd+Shift+Z / Ctrl/Cmd+Y to redo; toolbar buttons mirror them.
 
 ## Conventions
 

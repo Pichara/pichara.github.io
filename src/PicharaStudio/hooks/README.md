@@ -11,7 +11,7 @@ Hooks encapsulate complex logic and side effects, keeping components clean and f
 | `useDiagramStore` | Typed selector for the diagram Zustand store |
 | `useUIStore` | Typed selector for the UI state Zustand store |
 | `useHistoryStore` | Typed selector for the undo/redo history store |
-| `useKeyboardShortcuts` | Register and manage keyboard shortcuts (Ctrl+Z, Ctrl+C, Delete, etc.) |
+| `useKeyboardShortcuts` | Register and manage keyboard shortcuts (Ctrl+Z, Ctrl+C, Delete, etc.) — implemented for undo/redo (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl/Cmd+Y) |
 | `useClipboard` | Cut/copy/paste operations for nodes and edges |
 | `useDragAndDrop` | Handle drag-from-sidebar-to-canvas for adding new nodes |
 | `useAutoSave` | Periodic LocalStorage persistence with debouncing |

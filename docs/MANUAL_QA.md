@@ -15,3 +15,11 @@ This checklist is **not** satisfied by CI. Review before merging.
 - [ ] Check browser console for errors, image loading, and page layout overflow.
 
 **CI:** `npm run check` runs TypeScript + animation-model tests; `npm run build` performs a typechecked Vite production build on PRs. Nothing deploys from a PR.
+
+## Pichara Diagram Studio (`/diagram`)
+
+- [ ] Add a shape, undo (Ctrl+Z or toolbar Undo) — the shape disappears; redo brings it back. Buttons disable when their stack is empty.
+- [ ] Drag a node, undo — it returns to its pre-drag position in one step.
+- [ ] Connect two nodes, undo — the edge disappears; delete a node, undo — it comes back with its edges.
+- [ ] Undo past the first action does nothing; a new action after undo clears redo.
+- [ ] Reload the page — the undone state is what autosave persisted.

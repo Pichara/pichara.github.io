@@ -10,10 +10,12 @@ import Toolbar from "./toolbar/Toolbar";
 import DiagramCanvas from "./canvas/DiagramCanvas";
 import StatusBar from "./status-bar/StatusBar";
 import { useDiagramPersistence } from "../hooks/useDiagramPersistence";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import "./DiagramStudio.css";
 
 export default function DiagramStudio() {
   const { saveFailed } = useDiagramPersistence();
+  useKeyboardShortcuts();
 
   return (
     <div className="studio-root">

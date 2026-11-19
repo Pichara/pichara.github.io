@@ -9,6 +9,7 @@
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useDiagramStore } from "../../stores/diagramStore";
+import { useHistoryStore } from "../../stores/historyStore";
 import { computeSpawnPosition } from "../../utils/geometry";
 import type { ShapeKind } from "../../types";
 
@@ -32,6 +33,10 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
   const viewport = useDiagramStore((state) => state.diagram.viewport);
   const spawnOffset = useDiagramStore((state) => state.spawnOffset);
   const diagramName = useDiagramStore((state) => state.diagram.name);
+  const undo = useHistoryStore((state) => state.undo);
+  const redo = useHistoryStore((state) => state.redo);
+  const canUndo = useHistoryStore((state) => state.past.length > 0);
+  const canRedo = useHistoryStore((state) => state.future.length > 0);
 
   const handleAddShape = useCallback(
     (shape: ShapeKind) => {
@@ -83,6 +88,32 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
             + {shape.label}
           </button>
         ))}
+      </div>
+      <div
+        className="studio-toolbar__history"
+        role="group"
+        aria-label="Undo and redo"
+      >
+        <button
+          type="button"
+          className="studio-button"
+          onClick={undo}
+          disabled={!canUndo}
+          title="Undo (Ctrl+Z)"
+          aria-label="Undo"
+        >
+          ↩ Undo
+        </button>
+        <button
+          type="button"
+          className="studio-button"
+          onClick={redo}
+          disabled={!canRedo}
+          title="Redo (Ctrl+Shift+Z)"
+          aria-label="Redo"
+        >
+          ↪ Redo
+        </button>
       </div>
       <button
         type="button"

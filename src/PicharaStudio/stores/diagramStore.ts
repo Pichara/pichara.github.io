@@ -11,6 +11,8 @@
  * method applies the queued changes with the library's logic — the store
  * just hands it the current elements. Persistence is deliberately NOT done
  * here — see `services/persistence.ts` and `hooks/useDiagramPersistence.ts`.
+ * Undo/redo history IS recorded here: content-changing actions push the
+ * pre-change diagram into `stores/historyStore.ts` (see `recordHistory`).
  */
 
 import { create } from "zustand";
@@ -30,6 +32,19 @@ import type {
 } from "../types";
 import { DEFAULT_VIEWPORT, createDefaultMetadata } from "../constants";
 import { generateId } from "../utils/generate-id";
+import { useHistoryStore } from "./historyStore";
+
+/**
+ * True while a node drag is in progress. Module-scoped (not store state):
+ * it only exists to record one history entry per drag — on the first
+ * `position` change with `dragging: true` — instead of one per pointer move.
+ */
+let nodeDragActive = false;
+
+/** Record the given diagram so the next undo returns to it. */
+function recordHistory(diagram: Diagram): void {
+  useHistoryStore.getState().pushHistory(diagram);
+}
 
 /** Build a fresh, empty diagram. */
 export function createEmptyDiagram(): Diagram {
@@ -80,11 +95,12 @@ interface DiagramStore {
   newDiagram: () => void;
 }
 
-export const useDiagramStore = create<DiagramStore>()((set) => ({
+export const useDiagramStore = create<DiagramStore>()((set, get) => ({
   diagram: createEmptyDiagram(),
   spawnOffset: 0,
 
-  addNode: (shape, position) =>
+  addNode: (shape, position) => {
+    recordHistory(get().diagram);
     set((state) => {
       const node: DiagramNode<BaseShapeNodeData> = {
         id: generateId(),
@@ -99,25 +115,47 @@ export const useDiagramStore = create<DiagramStore>()((set) => ({
         },
         spawnOffset: (state.spawnOffset + 40) % 200,
       };
-    }),
+    });
+  },
 
-  onNodesChange: (changes) =>
+  onNodesChange: (changes) => {
+    // Record content changes only: deletions, and one entry per node drag
+    // (on the first `position` change with `dragging: true`). Selection
+    // changes and intermediate drag positions are not undoable steps.
+    const positionChanges = changes.getByType("position");
+    const dragging = positionChanges.some(
+      (change) => change.dragging === true
+    );
+    const dragEnded = positionChanges.some(
+      (change) => change.dragging === false
+    );
+    if (changes.getByType("remove").length > 0 || (dragging && !nodeDragActive)) {
+      recordHistory(get().diagram);
+    }
+    nodeDragActive = dragging ? true : dragEnded ? false : nodeDragActive;
     set((state) => ({
       diagram: {
         ...state.diagram,
         nodes: changes.applyTo(state.diagram.nodes),
       },
-    })),
+    }));
+  },
 
-  onEdgesChange: (changes) =>
+  onEdgesChange: (changes) => {
+    // Selection changes are not undoable; only deletions are recorded.
+    if (changes.getByType("remove").length > 0) {
+      recordHistory(get().diagram);
+    }
     set((state) => ({
       diagram: {
         ...state.diagram,
         edges: changes.applyTo(state.diagram.edges),
       },
-    })),
+    }));
+  },
 
-  onConnect: (connection) =>
+  onConnect: (connection) => {
+    recordHistory(get().diagram);
     set((state) => ({
       diagram: {
         ...state.diagram,
@@ -126,16 +164,23 @@ export const useDiagramStore = create<DiagramStore>()((set) => ({
           state.diagram.edges
         ),
       },
-    })),
+    }));
+  },
 
   setViewport: (viewport) =>
     set((state) => ({
       diagram: { ...state.diagram, viewport },
     })),
 
-  loadDiagram: (diagram) =>
-    set({ diagram, spawnOffset: 0 }),
+  loadDiagram: (diagram) => {
+    // A different diagram replaces the current one: past undo steps from
+    // the old diagram must not leak into the new one.
+    useHistoryStore.getState().clearHistory();
+    set({ diagram, spawnOffset: 0 });
+  },
 
-  newDiagram: () =>
-    set({ diagram: createEmptyDiagram(), spawnOffset: 0 }),
+  newDiagram: () => {
+    useHistoryStore.getState().clearHistory();
+    set({ diagram: createEmptyDiagram(), spawnOffset: 0 });
+  },
 }));
