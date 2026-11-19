@@ -13,6 +13,9 @@
  * is selected, React Flow's NodeResizer shows handles to resize it.
  * Resizing writes explicit width/height on the node, so the component
  * renders those when present and falls back to the defaults otherwise.
+ * The fallback also covers the fresh-node case: React Flow v13 passes
+ * measured dimensions as the width/height props, and a new node measures
+ * 0x0 — see `utils/node-size.ts`.
  */
 
 import { memo, useState, type KeyboardEvent } from "react";
@@ -24,15 +27,11 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import type { BaseShapeNodeData } from "../../types";
-import {
-  DEFAULT_NODE_HEIGHT,
-  DEFAULT_NODE_WIDTH,
-  MIN_NODE_HEIGHT,
-  MIN_NODE_WIDTH,
-} from "../../constants";
+import { MIN_NODE_HEIGHT, MIN_NODE_WIDTH } from "../../constants";
 import { useDiagramStore } from "../../stores/diagramStore";
 import { resolveNodeStyle } from "../../utils/apply-style";
 import { commitLabelEdit } from "../../utils/node-editing";
+import { resolveNodeSize } from "../../utils/node-size";
 import { shapePolygonPoints } from "../../utils/shape-geometry";
 
 function BaseShapeNode({
@@ -45,6 +44,12 @@ function BaseShapeNode({
   const style = resolveNodeStyle(data.style);
   const polygonPoints = shapePolygonPoints(data.shape);
   const updateNodeLabel = useDiagramStore((state) => state.updateNodeLabel);
+  // Fresh nodes arrive with width/height 0 (unmeasured); resolve to the
+  // defaults so the shape renders instead of collapsing to 0x0.
+  const { width: nodeWidth, height: nodeHeight } = resolveNodeSize(
+    width,
+    height
+  );
 
   // Inline label editing — local UI state only; the store is touched
   // once, on commit, so typing never writes history entries.
@@ -79,8 +84,8 @@ function BaseShapeNode({
         selected ? " is-selected" : ""
       }`}
       style={{
-        width: width ?? DEFAULT_NODE_WIDTH,
-        height: height ?? DEFAULT_NODE_HEIGHT,
+        width: nodeWidth,
+        height: nodeHeight,
         opacity: style.opacity,
       }}
     >

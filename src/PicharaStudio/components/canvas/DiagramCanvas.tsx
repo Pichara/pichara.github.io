@@ -96,7 +96,12 @@ export default function DiagramCanvas() {
         maxZoom={MAX_ZOOM}
         snapGrid={[GRID_SIZE, GRID_SIZE]}
         snapToGrid
-        fitView
+        // No `fitView`: in React Flow v13 the prop queues a fit until the
+        // nodes finish initializing, so the first node added to an empty
+        // canvas would re-center and zoom the camera (up to 400% for a
+        // single node). The viewport is controlled and persisted instead,
+        // so adding a shape never moves the camera. An on-demand
+        // "zoom to fit" belongs on a toolbar button (improvements list).
       >
         <Background variant={BackgroundVariant.Dots} gap={GRID_SIZE} />
         <Controls />
