@@ -1,26 +1,15 @@
 /**
  * Toolbar — top bar of the diagram editor.
  *
- * Shape buttons add a base-shape node at the center of the visible
- * viewport; "New" starts an empty diagram (with a confirm step, since
- * autosave will replace the saved diagram).
+ * Shapes live in the left sidebar (`components/sidebar/ShapeLibrary.tsx`);
+ * this bar holds navigation, undo/redo, and "New" (starts an empty diagram
+ * with a confirm step, since autosave will replace the saved diagram).
  */
 
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useDiagramStore } from "../../stores/diagramStore";
 import { useHistoryStore } from "../../stores/historyStore";
-import { computeSpawnPosition } from "../../utils/geometry";
-import type { ShapeKind } from "../../types";
-
-/** Height of the toolbar in pixels — keep in sync with DiagramStudio.css. */
-const TOOLBAR_HEIGHT_PX = 48;
-
-const SHAPES: { kind: ShapeKind; label: string }[] = [
-  { kind: "rectangle", label: "Rectangle" },
-  { kind: "diamond", label: "Diamond" },
-  { kind: "ellipse", label: "Ellipse" },
-];
 
 interface ToolbarProps {
   /** True when the most recent LocalStorage autosave failed. */
@@ -28,28 +17,12 @@ interface ToolbarProps {
 }
 
 export default function Toolbar({ saveFailed }: ToolbarProps) {
-  const addNode = useDiagramStore((state) => state.addNode);
   const newDiagram = useDiagramStore((state) => state.newDiagram);
-  const viewport = useDiagramStore((state) => state.diagram.viewport);
-  const spawnOffset = useDiagramStore((state) => state.spawnOffset);
   const diagramName = useDiagramStore((state) => state.diagram.name);
   const undo = useHistoryStore((state) => state.undo);
   const redo = useHistoryStore((state) => state.redo);
   const canUndo = useHistoryStore((state) => state.past.length > 0);
   const canRedo = useHistoryStore((state) => state.future.length > 0);
-
-  const handleAddShape = useCallback(
-    (shape: ShapeKind) => {
-      const position = computeSpawnPosition(
-        viewport,
-        spawnOffset,
-        window.innerWidth,
-        window.innerHeight - TOOLBAR_HEIGHT_PX
-      );
-      addNode(shape, position);
-    },
-    [addNode, viewport, spawnOffset]
-  );
 
   const handleNewDiagram = useCallback(() => {
     if (
@@ -73,22 +46,6 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
           Couldn&apos;t save locally
         </span>
       ) : null}
-      <div
-        className="studio-toolbar__shapes"
-        role="group"
-        aria-label="Add shape"
-      >
-        {SHAPES.map((shape) => (
-          <button
-            key={shape.kind}
-            type="button"
-            className="studio-button"
-            onClick={() => handleAddShape(shape.kind)}
-          >
-            + {shape.label}
-          </button>
-        ))}
-      </div>
       <div
         className="studio-toolbar__history"
         role="group"

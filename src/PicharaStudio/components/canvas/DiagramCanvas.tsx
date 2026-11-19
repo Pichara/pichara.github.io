@@ -6,7 +6,7 @@
  * itself holds no diagram state.
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, type DragEvent } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -18,8 +18,15 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useDiagramStore } from "../../stores/diagramStore";
 import { customNodeTypes } from "../../nodes";
-import { GRID_SIZE, MAX_ZOOM, MIN_ZOOM } from "../../constants";
+import {
+  GRID_SIZE,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  SHAPE_DRAG_MIME_TYPE,
+} from "../../constants";
 import { edgePresentation } from "../../utils/apply-style";
+import { computeDropPosition } from "../../utils/geometry";
+import type { ShapeKind } from "../../types";
 
 export default function DiagramCanvas() {
   const nodes = useDiagramStore((state) => state.diagram.nodes);
@@ -29,6 +36,7 @@ export default function DiagramCanvas() {
   const onEdgesChange = useDiagramStore((state) => state.onEdgesChange);
   const onConnect = useDiagramStore((state) => state.onConnect);
   const setViewport = useDiagramStore((state) => state.setViewport);
+  const addNode = useDiagramStore((state) => state.addNode);
 
   // Translate each edge's domain style into the props React Flow renders
   // (stroke color/width/dash, animation). The stored edge keeps only the
@@ -45,8 +53,36 @@ export default function DiagramCanvas() {
     [setViewport]
   );
 
+  const handleDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const handleDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      const shape = event.dataTransfer.getData(
+        SHAPE_DRAG_MIME_TYPE
+      ) as ShapeKind;
+      if (!shape) return;
+      const position = computeDropPosition(
+        event.clientX,
+        event.clientY,
+        event.currentTarget.getBoundingClientRect(),
+        viewport
+      );
+      addNode(shape, position);
+    },
+    [addNode, viewport]
+  );
+
   return (
-    <div className="studio-canvas" aria-label="Diagram canvas">
+    <div
+      className="studio-canvas"
+      aria-label="Diagram canvas"
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <ReactFlow
         nodes={nodes}
         edges={flowEdges}

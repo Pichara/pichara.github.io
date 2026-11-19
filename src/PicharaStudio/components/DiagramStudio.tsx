@@ -1,12 +1,14 @@
 /**
  * DiagramStudio — root component of the diagram editor.
  *
- * Layout: toolbar on top, React Flow canvas filling the middle, status bar
- * at the bottom. This component is lazy-loaded by the router, so the
- * portfolio never downloads editor code until the user opens /diagram.
+ * Layout: toolbar on top, shape library on the left, React Flow canvas in
+ * the middle, format panel on the right, status bar at the bottom. This
+ * component is lazy-loaded by the router, so the portfolio never downloads
+ * editor code until the user opens /diagram.
  */
 
 import Toolbar from "./toolbar/Toolbar";
+import ShapeLibrary from "./sidebar/ShapeLibrary";
 import DiagramCanvas from "./canvas/DiagramCanvas";
 import FormatPanel from "./panels/FormatPanel";
 import StatusBar from "./status-bar/StatusBar";
@@ -22,6 +24,7 @@ export default function DiagramStudio() {
     <div className="studio-root">
       <Toolbar saveFailed={saveFailed} />
       <main className="studio-main">
+        <ShapeLibrary />
         <div className="studio-main__canvas">
           <DiagramCanvas />
         </div>

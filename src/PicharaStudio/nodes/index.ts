@@ -12,4 +12,8 @@ export const customNodeTypes: NodeTypes = {
   "shape-rectangle": BaseShapeNode,
   "shape-diamond": BaseShapeNode,
   "shape-ellipse": BaseShapeNode,
+  "shape-triangle": BaseShapeNode,
+  "shape-parallelogram": BaseShapeNode,
+  "shape-hexagon": BaseShapeNode,
+  "shape-pentagon": BaseShapeNode,
 };

@@ -18,3 +18,12 @@ export {
   STORAGE_KEY_PREFIX,
   STORAGE_INDEX_KEY,
 } from "./defaults";
+
+export {
+  SHAPE_LIBRARY,
+  SHAPE_DRAG_MIME_TYPE,
+} from "./shapes";
+export type {
+  ShapeLibraryCategory,
+  ShapeLibraryEntry,
+} from "./shapes";

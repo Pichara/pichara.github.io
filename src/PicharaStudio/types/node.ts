@@ -83,7 +83,14 @@ export type BaseNodeData = {
 };
 
 /** Kinds of base shapes available in the shape library. */
-export type ShapeKind = "rectangle" | "diamond" | "ellipse";
+export type ShapeKind =
+  | "rectangle"
+  | "diamond"
+  | "ellipse"
+  | "triangle"
+  | "parallelogram"
+  | "hexagon"
+  | "pentagon";
 
 /**
  * Data payload for base shape nodes (rectangle, diamond, ellipse).

@@ -3,7 +3,10 @@
  */
 
 import type { NodePosition, Viewport } from "../types";
-import { DEFAULT_NODE_HEIGHT, DEFAULT_NODE_WIDTH } from "../constants";
+import {
+  DEFAULT_NODE_HEIGHT,
+  DEFAULT_NODE_WIDTH,
+} from "../constants/defaults.ts";
 
 /**
  * Compute where a newly added node should be placed: the center of the
@@ -25,4 +28,28 @@ export function computeSpawnPosition(
     (containerHeight / 2 - viewport.y) / viewport.zoom -
     DEFAULT_NODE_HEIGHT / 2;
   return { x: centerX + spawnOffset, y: centerY + spawnOffset };
+}
+
+/**
+ * Convert a drop point (client/screen pixels) into canvas coordinates,
+ * centering the new node under the cursor.
+ *
+ * `containerRect` is the canvas element's bounding rect; `viewport` is
+ * the current camera (x/y offset and zoom). This mirrors React Flow's
+ * `screenToFlowPosition` for a point inside the container.
+ */
+export function computeDropPosition(
+  clientX: number,
+  clientY: number,
+  containerRect: { left: number; top: number },
+  viewport: Viewport
+): NodePosition {
+  return {
+    x:
+      (clientX - containerRect.left - viewport.x) / viewport.zoom -
+      DEFAULT_NODE_WIDTH / 2,
+    y:
+      (clientY - containerRect.top - viewport.y) / viewport.zoom -
+      DEFAULT_NODE_HEIGHT / 2,
+  };
 }

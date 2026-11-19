@@ -1,10 +1,12 @@
 /**
  * BaseShapeNode — renders one of the base shapes (rectangle, diamond,
- * ellipse) from the shape library.
+ * ellipse, triangle, parallelogram, hexagon, pentagon) from the shape
+ * library.
  *
- * The shape is a visual variant driven by `data.shape`; the background
- * layer carries the geometry (so the diamond's clip-path never clips the
- * connection handles) and the content layer carries the label.
+ * Rectangle and ellipse use a CSS background layer; polygon shapes are
+ * drawn as an inline SVG polygon so the border follows the shape outline
+ * (a clip-path would cut the border off). The content layer carries the
+ * label on top of either background.
  */
 
 import { memo } from "react";
@@ -12,12 +14,14 @@ import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import type { BaseShapeNodeData } from "../../types";
 import { DEFAULT_NODE_HEIGHT, DEFAULT_NODE_WIDTH } from "../../constants";
 import { resolveNodeStyle } from "../../utils/apply-style";
+import { shapePolygonPoints } from "../../utils/shape-geometry";
 
 function BaseShapeNode({
   data,
   selected,
 }: NodeProps<Node<BaseShapeNodeData>>) {
   const style = resolveNodeStyle(data.style);
+  const polygonPoints = shapePolygonPoints(data.shape);
   return (
     <div
       className={`shape-node shape-node--${data.shape}${
@@ -29,19 +33,36 @@ function BaseShapeNode({
         opacity: style.opacity,
       }}
     >
-      <div
-        className="shape-node__bg"
-        aria-hidden="true"
-        style={{
-          backgroundColor: style.backgroundColor,
-          borderColor: style.borderColor,
-          borderWidth: style.borderWidth,
-          // The ellipse gets its roundness from CSS (50%); the diamond
-          // from its clip-path. Only the rectangle uses the radius value.
-          borderRadius:
-            data.shape === "rectangle" ? style.borderRadius : undefined,
-        }}
-      />
+      {polygonPoints === null ? (
+        <div
+          className="shape-node__bg"
+          aria-hidden="true"
+          style={{
+            backgroundColor: style.backgroundColor,
+            borderColor: style.borderColor,
+            borderWidth: style.borderWidth,
+            // The ellipse gets its roundness from CSS (50%); only the
+            // rectangle uses the radius value.
+            borderRadius:
+              data.shape === "rectangle" ? style.borderRadius : undefined,
+          }}
+        />
+      ) : (
+        <svg
+          className="shape-node__bg shape-node__bg--svg"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <polygon
+            points={polygonPoints}
+            fill={style.backgroundColor}
+            stroke={style.borderColor}
+            strokeWidth={style.borderWidth}
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      )}
       <div className="shape-node__content">
         <span
           className="shape-node__label"
