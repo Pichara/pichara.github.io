@@ -295,6 +295,11 @@
   margin-left: auto;
 }
 
+.studio-toolbar__export {
+  display: flex;
+  gap: 8px;
+}
+
 .studio-button {
   appearance: none;
   border: 1px solid #d1d5db;

@@ -19,13 +19,13 @@ export {
   MAX_HISTORY_SIZE,
   STORAGE_KEY_PREFIX,
   STORAGE_INDEX_KEY,
-} from "./defaults";
+} from "./defaults.ts";
 
 export {
   SHAPE_LIBRARY,
   SHAPE_DRAG_MIME_TYPE,
-} from "./shapes";
+} from "./shapes.ts";
 export type {
   ShapeLibraryCategory,
   ShapeLibraryEntry,
-} from "./shapes";
+} from "./shapes.ts";

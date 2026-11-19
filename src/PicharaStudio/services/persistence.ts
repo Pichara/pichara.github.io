@@ -10,7 +10,7 @@
  */
 
 import type { Diagram, DiagramEdge, DiagramNode } from "../types";
-import { DIAGRAM_SCHEMA_VERSION, STORAGE_KEY_PREFIX } from "../constants";
+import { DIAGRAM_SCHEMA_VERSION, STORAGE_KEY_PREFIX } from "../constants/index.ts";
 
 /** LocalStorage key holding the current diagram. */
 export const DIAGRAM_STORAGE_KEY = `${STORAGE_KEY_PREFIX}:diagram`;
