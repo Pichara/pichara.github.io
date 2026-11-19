@@ -43,6 +43,14 @@ import {
 import { useHistoryStore } from "./historyStore";
 
 /**
+ * True while a node resize is in progress. Module-scoped (not store state):
+ * it only exists to record one history entry per resize gesture — on the
+ * first `dimensions` change with `resizing: true` — instead of one per
+ * pointer move. Mirrors `nodeDragActive` below.
+ */
+let nodeResizeActive = false;
+
+/**
  * True while a node drag is in progress. Module-scoped (not store state):
  * it only exists to record one history entry per drag — on the first
  * `position` change with `dragging: true` — instead of one per pointer move.
@@ -125,6 +133,12 @@ interface DiagramStore {
   /** Remove style overrides from every selected node and edge (back to defaults). */
   resetSelectedStyle: () => void;
 
+  /**
+   * Replace a node's label (double-click edit). Records one undo step.
+   * No-op when the node does not exist or the label is unchanged.
+   */
+  updateNodeLabel: (nodeId: string, label: string) => void;
+
   /** Replace the current diagram with a loaded one. */
   loadDiagram: (diagram: Diagram) => void;
 
@@ -156,9 +170,11 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
   },
 
   onNodesChange: (changes) => {
-    // Record content changes only: deletions, and one entry per node drag
-    // (on the first `position` change with `dragging: true`). Selection
-    // changes and intermediate drag positions are not undoable steps.
+    // Record content changes only: deletions, one entry per node drag (on
+    // the first `position` change with `dragging: true`), and one entry
+    // per node resize (on the first `dimensions` change with
+    // `resizing: true`). Selection changes and intermediate drag/resize
+    // positions are not undoable steps.
     const positionChanges = changes.getByType("position");
     const dragging = positionChanges.some(
       (change) => change.dragging === true
@@ -166,10 +182,26 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     const dragEnded = positionChanges.some(
       (change) => change.dragging === false
     );
-    if (changes.getByType("remove").length > 0 || (dragging && !nodeDragActive)) {
+    const dimensionChanges = changes.getByType("dimensions");
+    const resizing = dimensionChanges.some(
+      (change) => change.resizing === true
+    );
+    const resizeEnded = dimensionChanges.some(
+      (change) => change.resizing === false
+    );
+    if (
+      changes.getByType("remove").length > 0 ||
+      (dragging && !nodeDragActive) ||
+      (resizing && !nodeResizeActive)
+    ) {
       recordHistory(get().diagram);
     }
     nodeDragActive = dragging ? true : dragEnded ? false : nodeDragActive;
+    nodeResizeActive = resizing
+      ? true
+      : resizeEnded
+        ? false
+        : nodeResizeActive;
     set((state) => ({
       diagram: {
         ...state.diagram,
@@ -256,6 +288,23 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
         ),
         edges: state.diagram.edges.map((edge) =>
           edge.selected ? clearEdgeStyle(edge) : edge
+        ),
+      },
+    }));
+  },
+
+  updateNodeLabel: (nodeId, label) => {
+    const { diagram } = get();
+    const node = diagram.nodes.find((candidate) => candidate.id === nodeId);
+    if (!node || node.data.label === label) return;
+    recordHistory(diagram);
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        nodes: state.diagram.nodes.map((candidate) =>
+          candidate.id === nodeId
+            ? { ...candidate, data: { ...candidate.data, label } }
+            : candidate
         ),
       },
     }));

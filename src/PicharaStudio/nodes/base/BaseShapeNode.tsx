@@ -7,32 +7,86 @@
  * drawn as an inline SVG polygon so the border follows the shape outline
  * (a clip-path would cut the border off). The content layer carries the
  * label on top of either background.
+ *
+ * Interactions: double-click the label to edit it inline (Enter commits,
+ * Escape cancels, an empty label keeps the previous text); when the node
+ * is selected, React Flow's NodeResizer shows handles to resize it.
+ * Resizing writes explicit width/height on the node, so the component
+ * renders those when present and falls back to the defaults otherwise.
  */
 
-import { memo } from "react";
-import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
+import { memo, useState, type KeyboardEvent } from "react";
+import {
+  Handle,
+  NodeResizer,
+  Position,
+  type Node,
+  type NodeProps,
+} from "@xyflow/react";
 import type { BaseShapeNodeData } from "../../types";
-import { DEFAULT_NODE_HEIGHT, DEFAULT_NODE_WIDTH } from "../../constants";
+import {
+  DEFAULT_NODE_HEIGHT,
+  DEFAULT_NODE_WIDTH,
+  MIN_NODE_HEIGHT,
+  MIN_NODE_WIDTH,
+} from "../../constants";
+import { useDiagramStore } from "../../stores/diagramStore";
 import { resolveNodeStyle } from "../../utils/apply-style";
+import { commitLabelEdit } from "../../utils/node-editing";
 import { shapePolygonPoints } from "../../utils/shape-geometry";
 
 function BaseShapeNode({
+  id,
   data,
   selected,
+  width,
+  height,
 }: NodeProps<Node<BaseShapeNodeData>>) {
   const style = resolveNodeStyle(data.style);
   const polygonPoints = shapePolygonPoints(data.shape);
+  const updateNodeLabel = useDiagramStore((state) => state.updateNodeLabel);
+
+  // Inline label editing — local UI state only; the store is touched
+  // once, on commit, so typing never writes history entries.
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const startEditing = (): void => {
+    setDraft(data.label);
+    setEditing(true);
+  };
+
+  const commitEditing = (): void => {
+    const next = commitLabelEdit(data.label, draft);
+    if (next !== null) updateNodeLabel(id, next);
+    setEditing(false);
+  };
+
+  const handleEditorKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      // Enter commits; Shift+Enter inserts a newline.
+      event.preventDefault();
+      commitEditing();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      setEditing(false);
+    }
+  };
+
   return (
     <div
       className={`shape-node shape-node--${data.shape}${
         selected ? " is-selected" : ""
       }`}
       style={{
-        width: DEFAULT_NODE_WIDTH,
-        minHeight: DEFAULT_NODE_HEIGHT,
+        width: width ?? DEFAULT_NODE_WIDTH,
+        height: height ?? DEFAULT_NODE_HEIGHT,
         opacity: style.opacity,
       }}
     >
+      {selected ? (
+        <NodeResizer minWidth={MIN_NODE_WIDTH} minHeight={MIN_NODE_HEIGHT} />
+      ) : null}
       {polygonPoints === null ? (
         <div
           className="shape-node__bg"
@@ -63,20 +117,38 @@ function BaseShapeNode({
           />
         </svg>
       )}
-      <div className="shape-node__content">
-        <span
-          className="shape-node__label"
-          style={{
-            color: style.textColor,
-            fontSize: style.fontSize,
-            fontWeight: style.fontWeight,
-          }}
-        >
-          {data.label}
-        </span>
-        {data.description ? (
-          <span className="shape-node__description">{data.description}</span>
-        ) : null}
+      <div className="shape-node__content" onDoubleClick={startEditing}>
+        {editing ? (
+          <textarea
+            className="shape-node__label-input nodrag nowheel"
+            value={draft}
+            autoFocus
+            onFocus={(event) => event.target.select()}
+            onChange={(event) => setDraft(event.target.value)}
+            onBlur={commitEditing}
+            onKeyDown={handleEditorKeyDown}
+            aria-label="Edit node label"
+            rows={2}
+          />
+        ) : (
+          <>
+            <span
+              className="shape-node__label"
+              style={{
+                color: style.textColor,
+                fontSize: style.fontSize,
+                fontWeight: style.fontWeight,
+              }}
+            >
+              {data.label}
+            </span>
+            {data.description ? (
+              <span className="shape-node__description">
+                {data.description}
+              </span>
+            ) : null}
+          </>
+        )}
       </div>
       <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Bottom} />

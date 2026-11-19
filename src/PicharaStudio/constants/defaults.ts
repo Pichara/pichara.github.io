@@ -56,6 +56,12 @@ export const DEFAULT_NODE_WIDTH = 180;
 /** Default height for new nodes (in canvas pixels). */
 export const DEFAULT_NODE_HEIGHT = 60;
 
+/** Smallest width a node can be resized to (in canvas pixels). */
+export const MIN_NODE_WIDTH = 80;
+
+/** Smallest height a node can be resized to (in canvas pixels). */
+export const MIN_NODE_HEIGHT = 40;
+
 /** Snap-to-grid increment (in canvas pixels). Set to 0 to disable. */
 export const GRID_SIZE = 15;
 
