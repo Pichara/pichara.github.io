@@ -19,8 +19,8 @@
 
 import {
   DIAGRAM_STORAGE_KEY,
+  parseDiagramText,
   serializeDiagram,
-  validateDiagram,
 } from "./persistence.ts";
 import { STORAGE_KEY_PREFIX } from "../constants/index.ts";
 import type { Diagram } from "../types/index.ts";
@@ -190,11 +190,8 @@ export function loadDiagramFromLibrary(
     return null;
   }
   if (raw === null) return null;
-  try {
-    return validateDiagram(JSON.parse(raw) as unknown);
-  } catch {
-    return null;
-  }
+  const result = parseDiagramText(raw);
+  return result.ok ? result.diagram : null;
 }
 
 /**
@@ -253,13 +250,9 @@ export function migrateLegacyDiagram(
     return null;
   }
   if (legacyRaw === null) return null;
-  let diagram: Diagram | null;
-  try {
-    diagram = validateDiagram(JSON.parse(legacyRaw) as unknown);
-  } catch {
-    return null;
-  }
-  if (diagram === null) return null;
+  const parsed = parseDiagramText(legacyRaw);
+  if (!parsed.ok) return null;
+  const diagram = parsed.diagram;
   if (!saveDiagramToLibrary(diagram, resolved)) return null;
   try {
     resolved.removeItem(DIAGRAM_STORAGE_KEY);

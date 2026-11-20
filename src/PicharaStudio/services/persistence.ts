@@ -84,11 +84,49 @@ export function validateDiagram(data: unknown): Diagram | null {
   return data as Diagram;
 }
 
+/**
+ * Parse JSON text as a `Diagram`, distinguishing the two failure modes
+ * so callers can report the right error: malformed JSON vs. valid JSON
+ * with the wrong shape. Single gate for every JSON → Diagram load
+ * (LocalStorage, library, import) — the parse lives in one place.
+ */
+export type ParseDiagramTextResult =
+  | { ok: true; diagram: Diagram }
+  | { ok: false; reason: "invalid-json" | "invalid-diagram" };
+
+export function parseDiagramText(text: string): ParseDiagramTextResult {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text) as unknown;
+  } catch {
+    return { ok: false, reason: "invalid-json" };
+  }
+  const diagram = validateDiagram(parsed);
+  if (diagram === null) {
+    return { ok: false, reason: "invalid-diagram" };
+  }
+  return { ok: true, diagram };
+}
+
+/**
+ * The browser's LocalStorage when available, else `null` (private mode,
+ * disabled cookies, or a non-browser runtime such as Node tests).
+ */
+function localStorageOrNull(): Storage | null {
+  try {
+    if (typeof localStorage === "undefined") return null;
+    return localStorage;
+  } catch {
+    return null;
+  }
+}
+
 /** Save the current diagram to LocalStorage. Returns false when unavailable. */
 export function saveDiagramToLocalStorage(diagram: Diagram): boolean {
+  const storage = localStorageOrNull();
+  if (storage === null) return false;
   try {
-    if (typeof localStorage === "undefined") return false;
-    localStorage.setItem(DIAGRAM_STORAGE_KEY, serializeDiagram(diagram));
+    storage.setItem(DIAGRAM_STORAGE_KEY, serializeDiagram(diagram));
     return true;
   } catch {
     return false;
@@ -97,21 +135,25 @@ export function saveDiagramToLocalStorage(diagram: Diagram): boolean {
 
 /** Load the saved diagram from LocalStorage, or `null` when none/invalid. */
 export function loadDiagramFromLocalStorage(): Diagram | null {
+  const storage = localStorageOrNull();
+  if (storage === null) return null;
+  let raw: string | null;
   try {
-    if (typeof localStorage === "undefined") return null;
-    const raw = localStorage.getItem(DIAGRAM_STORAGE_KEY);
-    if (raw === null) return null;
-    return validateDiagram(JSON.parse(raw) as unknown);
+    raw = storage.getItem(DIAGRAM_STORAGE_KEY);
   } catch {
     return null;
   }
+  if (raw === null) return null;
+  const result = parseDiagramText(raw);
+  return result.ok ? result.diagram : null;
 }
 
 /** Remove the saved diagram from LocalStorage. */
 export function clearSavedDiagram(): void {
+  const storage = localStorageOrNull();
+  if (storage === null) return;
   try {
-    if (typeof localStorage === "undefined") return;
-    localStorage.removeItem(DIAGRAM_STORAGE_KEY);
+    storage.removeItem(DIAGRAM_STORAGE_KEY);
   } catch {
     // Persistence is best-effort; the editor works without it.
   }

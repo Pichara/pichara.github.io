@@ -10,7 +10,7 @@
  * resolve them (see `utils/history-stack.ts` for the same convention).
  */
 
-import { validateDiagram } from "../persistence.ts";
+import { parseDiagramText } from "../persistence.ts";
 import type { Diagram } from "../../types/index.ts";
 
 /** Result of parsing an imported file. */
@@ -23,19 +23,13 @@ export type ParseDiagramResult =
  * and passes validation, otherwise a short error message for the UI.
  */
 export function parseDiagramJson(text: string): ParseDiagramResult {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text) as unknown;
-  } catch {
-    return { ok: false, error: "That file is not valid JSON." };
-  }
-  const diagram = validateDiagram(parsed);
-  if (diagram === null) {
-    return {
-      ok: false,
-      error:
-        "That file is not a Pichara Studio diagram (missing name, nodes, edges or version).",
-    };
-  }
-  return { ok: true, diagram };
+  const result = parseDiagramText(text);
+  if (result.ok) return result;
+  return {
+    ok: false,
+    error:
+      result.reason === "invalid-json"
+        ? "That file is not valid JSON."
+        : "That file is not a Pichara Studio diagram (missing name, nodes, edges or version).",
+  };
 }
