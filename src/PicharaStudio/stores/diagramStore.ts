@@ -45,6 +45,7 @@ import {
   alignNodes,
   cloneSelection,
   distributeNodes,
+  removeSelection,
   snapshotSelection,
   type AlignKind,
   type DistributeAxis,
@@ -111,6 +112,49 @@ interface DiagramStore {
    * of stacking exactly on top of each other. Reset by copying.
    */
   pasteCount: number;
+
+  /**
+   * Whether the dotted grid background is drawn on the canvas.
+   * Ephemeral view state — not part of the diagram, never persisted.
+   */
+  showGrid: boolean;
+
+  /**
+   * Whether node dragging, drops and spawns snap positions to the
+   * grid. Ephemeral view state — not part of the diagram, never
+   * persisted.
+   */
+  snapToGrid: boolean;
+
+  /**
+   * Incremented each time the user asks to zoom to fit. The canvas
+   * watches it and calls React Flow's `fitView` (the toolbar and the
+   * keyboard shortcut live outside the React Flow tree, so they cannot
+   * call it directly). Ephemeral view state, never persisted.
+   */
+  fitViewRequest: number;
+
+  /** Toggle the dotted grid background on the canvas. */
+  toggleGrid: () => void;
+
+  /** Toggle snapping node positions to the grid. */
+  toggleSnapToGrid: () => void;
+
+  /** Ask the canvas to zoom/pan so the whole diagram is visible. */
+  requestFitView: () => void;
+
+  /**
+   * Delete the selected nodes and edges (edges attached to a deleted
+   * node go away too, so none dangle). Records one undo step.
+   * No-op when nothing is selected.
+   */
+  deleteSelection: () => void;
+
+  /** Select every node and edge. Selection is not an undoable step. */
+  selectAll: () => void;
+
+  /** Clear the selection. Selection is not an undoable step. */
+  clearSelection: () => void;
 
   /** Copy the selected nodes (and edges between them) to the clipboard. */
   copySelection: () => void;
@@ -214,6 +258,80 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
   spawnOffset: 0,
   clipboard: null,
   pasteCount: 0,
+  showGrid: true,
+  snapToGrid: true,
+  fitViewRequest: 0,
+
+  toggleGrid: () => {
+    set((state) => ({ showGrid: !state.showGrid }));
+  },
+
+  toggleSnapToGrid: () => {
+    set((state) => ({ snapToGrid: !state.snapToGrid }));
+  },
+
+  requestFitView: () => {
+    set((state) => ({ fitViewRequest: state.fitViewRequest + 1 }));
+  },
+
+  deleteSelection: () => {
+    const { diagram } = get();
+    const hasSelection =
+      diagram.nodes.some((node) => node.selected) ||
+      diagram.edges.some((edge) => edge.selected);
+    if (!hasSelection) return;
+    recordHistory(diagram);
+    const { nodes, edges } = removeSelection(diagram.nodes, diagram.edges);
+    set((state) => ({
+      diagram: { ...state.diagram, nodes, edges },
+    }));
+  },
+
+  selectAll: () => {
+    const { diagram } = get();
+    if (
+      diagram.nodes.every((node) => node.selected) &&
+      diagram.edges.every((edge) => edge.selected)
+    ) {
+      return;
+    }
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        nodes: state.diagram.nodes.map((node) => ({
+          ...node,
+          selected: true,
+        })),
+        edges: state.diagram.edges.map((edge) => ({
+          ...edge,
+          selected: true,
+        })),
+      },
+    }));
+  },
+
+  clearSelection: () => {
+    const { diagram } = get();
+    if (
+      diagram.nodes.every((node) => !node.selected) &&
+      diagram.edges.every((edge) => !edge.selected)
+    ) {
+      return;
+    }
+    set((state) => ({
+      diagram: {
+        ...state.diagram,
+        nodes: state.diagram.nodes.map((node) => ({
+          ...node,
+          selected: false,
+        })),
+        edges: state.diagram.edges.map((edge) => ({
+          ...edge,
+          selected: false,
+        })),
+      },
+    }));
+  },
 
   copySelection: () => {
     const { diagram } = get();

@@ -23,3 +23,4 @@ This checklist is **not** satisfied by CI. Review before merging.
 - [ ] Connect two nodes, undo — the edge disappears; delete a node, undo — it comes back with its edges.
 - [ ] Undo past the first action does nothing; a new action after undo clears redo.
 - [ ] Reload the page — the undone state is what autosave persisted.
+- [ ] Zoom to fit (toolbar button or Ctrl+0) frames all shapes; Grid/Snap toggles hide the dots and stop snapping; Delete removes the selection (with its edges) in one undo step, Ctrl+A selects all, Esc clears the selection.

@@ -316,6 +316,11 @@
   gap: 8px;
 }
 
+.studio-toolbar__view {
+  display: flex;
+  gap: 8px;
+}
+
 .studio-toolbar__export {
   display: flex;
   gap: 8px;
@@ -338,6 +343,17 @@
 .studio-button:hover {
   background: #f9fafb;
   border-color: #9ca3af;
+}
+
+.studio-button[aria-pressed="true"] {
+  background: #dbeafe;
+  border-color: #2563eb;
+  color: #1e40af;
+}
+
+.studio-button[aria-pressed="true"]:hover {
+  background: #bfdbfe;
+  border-color: #2563eb;
 }
 
 .studio-button:disabled {

@@ -37,6 +37,16 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
     state.diagram.nodes.some((node) => node.selected)
   );
   const hasClipboard = useDiagramStore((state) => state.clipboard !== null);
+  const hasNodes = useDiagramStore(
+    (state) => state.diagram.nodes.length > 0
+  );
+  const showGrid = useDiagramStore((state) => state.showGrid);
+  const snapToGrid = useDiagramStore((state) => state.snapToGrid);
+  const toggleGrid = useDiagramStore((state) => state.toggleGrid);
+  const toggleSnapToGrid = useDiagramStore(
+    (state) => state.toggleSnapToGrid
+  );
+  const requestFitView = useDiagramStore((state) => state.requestFitView);
   const undo = useHistoryStore((state) => state.undo);
   const redo = useHistoryStore((state) => state.redo);
   const canUndo = useHistoryStore((state) => state.past.length > 0);
@@ -140,6 +150,42 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
           aria-label="Redo"
         >
           ↪ Redo
+        </button>
+      </div>
+      <div
+        className="studio-toolbar__view"
+        role="group"
+        aria-label="View"
+      >
+        <button
+          type="button"
+          className="studio-button"
+          onClick={requestFitView}
+          disabled={!hasNodes}
+          title="Zoom to fit the whole diagram (Ctrl+0)"
+          aria-label="Zoom to fit"
+        >
+          Zoom to fit
+        </button>
+        <button
+          type="button"
+          className="studio-button"
+          onClick={toggleGrid}
+          aria-pressed={showGrid}
+          title="Show or hide the dotted grid"
+          aria-label="Toggle grid"
+        >
+          Grid
+        </button>
+        <button
+          type="button"
+          className="studio-button"
+          onClick={toggleSnapToGrid}
+          aria-pressed={snapToGrid}
+          title="Snap shapes to the grid when moving, dropping or adding them"
+          aria-label="Toggle snap to grid"
+        >
+          Snap
         </button>
       </div>
       <div

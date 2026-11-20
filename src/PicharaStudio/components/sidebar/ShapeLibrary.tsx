@@ -8,8 +8,12 @@
 
 import { useCallback, type DragEvent } from "react";
 import { useDiagramStore } from "../../stores/diagramStore";
-import { SHAPE_LIBRARY, SHAPE_DRAG_MIME_TYPE } from "../../constants";
-import { computeSpawnPosition } from "../../utils/geometry";
+import {
+  GRID_SIZE,
+  SHAPE_LIBRARY,
+  SHAPE_DRAG_MIME_TYPE,
+} from "../../constants";
+import { computeSpawnPosition, snapPosition } from "../../utils/geometry";
 import { shapePolygonPoints } from "../../utils/shape-geometry";
 import type { ShapeKind } from "../../types";
 
@@ -66,18 +70,22 @@ export default function ShapeLibrary() {
   const addNode = useDiagramStore((state) => state.addNode);
   const viewport = useDiagramStore((state) => state.diagram.viewport);
   const spawnOffset = useDiagramStore((state) => state.spawnOffset);
+  const snapToGrid = useDiagramStore((state) => state.snapToGrid);
 
   const handleAddShape = useCallback(
     (shape: ShapeKind) => {
-      const position = computeSpawnPosition(
+      const rawPosition = computeSpawnPosition(
         viewport,
         spawnOffset,
         window.innerWidth,
         window.innerHeight - TOOLBAR_HEIGHT_PX
       );
+      const position = snapToGrid
+        ? snapPosition(rawPosition, GRID_SIZE)
+        : rawPosition;
       addNode(shape, position);
     },
-    [addNode, viewport, spawnOffset]
+    [addNode, viewport, spawnOffset, snapToGrid]
   );
 
   const handleDragStart = useCallback(

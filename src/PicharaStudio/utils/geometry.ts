@@ -53,3 +53,18 @@ export function computeDropPosition(
       DEFAULT_NODE_HEIGHT / 2,
   };
 }
+
+/**
+ * Round a canvas position to the nearest grid intersection, so a dropped
+ * or spawned node lands exactly on the grid when snap is enabled.
+ * `gridSize` must be positive; exact multiples are unchanged.
+ */
+export function snapPosition(
+  position: NodePosition,
+  gridSize: number
+): NodePosition {
+  return {
+    x: Math.round(position.x / gridSize) * gridSize,
+    y: Math.round(position.y / gridSize) * gridSize,
+  };
+}

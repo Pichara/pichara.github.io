@@ -4,6 +4,7 @@ import {
   alignNodes,
   cloneSelection,
   distributeNodes,
+  removeSelection,
   snapshotSelection,
 } from "../src/PicharaStudio/utils/selection-ops.ts";
 
@@ -190,4 +191,39 @@ test("distributeNodes returns no moves for fewer than three nodes", () => {
     distributeNodes([node("a", 0, 0), node("b", 100, 0)], "horizontal"),
     []
   );
+});
+
+test("removeSelection drops selected nodes and edges attached to them", () => {
+  const nodes = [
+    node("a", 0, 0, { selected: true }),
+    node("b", 100, 0),
+    node("c", 200, 0),
+  ];
+  const edges = [edge("e1", "a", "b"), edge("e2", "b", "c")];
+  const result = removeSelection(nodes, edges);
+  assert.deepEqual(
+    result.nodes.map((n) => n.id),
+    ["b", "c"]
+  );
+  // e1 touched the deleted node "a", so it goes too; e2 survives.
+  assert.deepEqual(
+    result.edges.map((e) => e.id),
+    ["e2"]
+  );
+});
+
+test("removeSelection drops a selected edge even when its nodes stay", () => {
+  const nodes = [node("a", 0, 0), node("b", 100, 0)];
+  const edges = [edge("e1", "a", "b", { selected: true })];
+  const result = removeSelection(nodes, edges);
+  assert.equal(result.nodes.length, 2);
+  assert.equal(result.edges.length, 0);
+});
+
+test("removeSelection with nothing selected keeps everything", () => {
+  const nodes = [node("a", 0, 0), node("b", 100, 0)];
+  const edges = [edge("e1", "a", "b")];
+  const result = removeSelection(nodes, edges);
+  assert.equal(result.nodes.length, 2);
+  assert.equal(result.edges.length, 1);
 });

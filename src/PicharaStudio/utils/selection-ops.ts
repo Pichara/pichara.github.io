@@ -155,6 +155,30 @@ function nodeBox(node: DiagramNode): NodeBox {
 }
 
 /**
+ * Remove the current selection: selected nodes go away, and so do
+ * selected edges plus any edge attached to a removed node (an edge must
+ * never dangle). Unselected, unattached elements are kept as-is.
+ * Returns new arrays; the inputs are not mutated.
+ */
+export function removeSelection(
+  nodes: DiagramNode[],
+  edges: DiagramEdge[]
+): { nodes: DiagramNode[]; edges: DiagramEdge[] } {
+  const removedIds = new Set(
+    nodes.filter((node) => node.selected).map((node) => node.id)
+  );
+  return {
+    nodes: nodes.filter((node) => !node.selected),
+    edges: edges.filter(
+      (edge) =>
+        !edge.selected &&
+        !removedIds.has(edge.source) &&
+        !removedIds.has(edge.target)
+    ),
+  };
+}
+
+/**
  * New positions that line the given nodes up with each other.
  * Returns an empty array when fewer than two nodes are given.
  *
