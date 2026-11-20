@@ -251,6 +251,13 @@ interface DiagramStore {
 
   /** Discard the current diagram and start a new empty one. */
   newDiagram: () => void;
+
+  /**
+   * Rename the current diagram (what the library list shows).
+   * Not an undoable step — like moving the camera, it is not canvas
+   * content. No-op for a blank name or the current name.
+   */
+  renameDiagram: (name: string) => void;
 }
 
 export const useDiagramStore = create<DiagramStore>()((set, get) => ({
@@ -634,5 +641,13 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
       clipboard: null,
       pasteCount: 0,
     });
+  },
+
+  renameDiagram: (name) => {
+    const trimmed = name.trim();
+    if (trimmed === "" || trimmed === get().diagram.name) return;
+    set((state) => ({
+      diagram: { ...state.diagram, name: trimmed },
+    }));
   },
 }));

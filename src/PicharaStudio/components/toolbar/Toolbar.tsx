@@ -11,6 +11,7 @@ import { useCallback, useRef, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { useDiagramStore } from "../../stores/diagramStore";
 import { useHistoryStore } from "../../stores/historyStore";
+import DiagramLibraryDialog from "../dialogs/DiagramLibraryDialog";
 import {
   exportDiagramAsJson,
   exportDiagramAsPng,
@@ -55,6 +56,7 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
   // Import/export failures are shown inline (same treatment as the
   // autosave warning) instead of failing silently.
   const [fileError, setFileError] = useState<string | null>(null);
+  const [showLibrary, setShowLibrary] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleNewDiagram = useCallback(() => {
@@ -273,10 +275,21 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
       <button
         type="button"
         className="studio-button"
+        onClick={() => setShowLibrary(true)}
+        title="Open templates and your saved diagrams"
+      >
+        Diagrams
+      </button>
+      <button
+        type="button"
+        className="studio-button"
         onClick={handleNewDiagram}
       >
         New
       </button>
+      {showLibrary ? (
+        <DiagramLibraryDialog onClose={() => setShowLibrary(false)} />
+      ) : null}
     </header>
   );
 }

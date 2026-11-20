@@ -40,6 +40,10 @@ Starter diagram templates for each diagram type.
 
 Templates are pre-built `Diagram` objects with example nodes and edges that give users a starting point. They are loaded when the user creates a new diagram and selects a template.
 
+### `diagram-library.ts`
+
+Named-diagram library in LocalStorage: an index of saved diagrams plus one key per diagram. `saveDiagramToLibrary` / `loadDiagramFromLibrary` / `deleteDiagramFromLibrary` manage named saves; `migrateLegacyDiagram` imports the old single-diagram key once. Autosave writes the current diagram into its own library entry (see `hooks/useDiagramPersistence.ts`).
+
 ## Conventions
 
 - Service functions are **pure** when possible (input → output, no side effects).
