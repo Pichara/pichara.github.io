@@ -9,15 +9,16 @@ import {
 } from "../src/PicharaStudio/utils/selection-ops.ts";
 
 /** Minimal shape node for the pure helpers (width/height explicit). */
-function node(id, x, y, { selected = false, width = 100, height = 60 } = {}) {
+function node(id, x, y, { selected = false, width = 100, height = 60, parentId, type = "shape-rectangle" } = {}) {
   return {
     id,
-    type: "shape-rectangle",
+    type,
     position: { x, y },
     data: { label: id, shape: "rectangle" },
     width,
     height,
     selected,
+    parentId,
   };
 }
 
@@ -226,4 +227,58 @@ test("removeSelection with nothing selected keeps everything", () => {
   const result = removeSelection(nodes, edges);
   assert.equal(result.nodes.length, 2);
   assert.equal(result.edges.length, 1);
+});
+
+test("snapshotSelection brings a selected group's children along", () => {
+  const nodes = [
+    node("g1", 0, 0, { selected: true, type: "group" }),
+    node("a", 24, 24, { parentId: "g1" }),
+    node("b", 100, 24, { parentId: "g1" }),
+    node("c", 500, 500),
+  ];
+  const edges = [edge("e1", "a", "b"), edge("e2", "a", "c")];
+  const snapshot = snapshotSelection(nodes, edges);
+  assert.deepEqual(
+    snapshot.nodes.map((n) => n.id),
+    ["g1", "a", "b"]
+  );
+  // e1 is internal to the copied set; e2 reaches the uncopied "c".
+  assert.deepEqual(
+    snapshot.edges.map((e) => e.id),
+    ["e1"]
+  );
+});
+
+test("cloneSelection remaps a child's parentId to the cloned group", () => {
+  const snapshot = {
+    nodes: [
+      node("g1", 0, 0, { type: "group" }),
+      node("a", 24, 24, { parentId: "g1" }),
+    ],
+    edges: [],
+  };
+  const clones = cloneSelection(snapshot, 20, (oldId) => `${oldId}-copy`);
+  const group = clones.nodes.find((n) => n.id === "g1-copy");
+  const child = clones.nodes.find((n) => n.id === "a-copy");
+  assert.equal(child.parentId, "g1-copy");
+  assert.deepEqual(group.position, { x: 20, y: 20 });
+  assert.deepEqual(child.position, { x: 44, y: 44 });
+  // The snapshot itself is untouched, so it can be pasted again.
+  assert.equal(snapshot.nodes[1].parentId, "g1");
+});
+
+test("removeSelection deletes a group together with its children", () => {
+  const nodes = [
+    node("g1", 0, 0, { selected: true, type: "group" }),
+    node("a", 24, 24, { parentId: "g1" }),
+    node("b", 100, 24, { parentId: "g1" }),
+    node("c", 500, 500),
+  ];
+  const edges = [edge("e1", "a", "b"), edge("e2", "b", "c")];
+  const result = removeSelection(nodes, edges);
+  assert.deepEqual(
+    result.nodes.map((n) => n.id),
+    ["c"]
+  );
+  assert.deepEqual(result.edges, []);
 });

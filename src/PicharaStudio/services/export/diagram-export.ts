@@ -20,9 +20,11 @@
  */
 
 import { DEFAULT_EDGE_STYLE } from "../../constants/defaults.ts";
+import { GROUP_NODE_TYPE } from "../../constants/defaults.ts";
 import { serializeDiagram } from "../persistence.ts";
 import { resolveEdgeStyle, resolveNodeStyle } from "../../utils/apply-style.ts";
 import { computeEdgePath, type NodeRect } from "../../utils/edge-path.ts";
+import { absoluteNodePosition } from "../../utils/grouping.ts";
 import { resolveNodeSize } from "../../utils/node-size.ts";
 import { shapePolygonPoints } from "../../utils/shape-geometry.ts";
 import type {
@@ -59,16 +61,19 @@ export function diagramExportBounds(diagram: Diagram): ExportBounds {
   if (diagram.nodes.length === 0) {
     return { x: 0, y: 0, width: 400, height: 300 };
   }
+  const byId = new Map(diagram.nodes.map((node) => [node.id, node]));
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
   for (const node of diagram.nodes) {
     const { width, height } = resolveNodeSize(node.width, node.height);
-    minX = Math.min(minX, node.position.x);
-    minY = Math.min(minY, node.position.y);
-    maxX = Math.max(maxX, node.position.x + width);
-    maxY = Math.max(maxY, node.position.y + height);
+    // Children of a group store positions relative to the group.
+    const position = absoluteNodePosition(node, byId);
+    minX = Math.min(minX, position.x);
+    minY = Math.min(minY, position.y);
+    maxX = Math.max(maxX, position.x + width);
+    maxY = Math.max(maxY, position.y + height);
   }
   return {
     x: minX - EXPORT_PADDING,
@@ -113,7 +118,8 @@ export function scalePolygonPoints(
 
 /**
  * Multi-line centered label as SVG text markup. Lines are split on `\n`;
- * the block is vertically centered on (`cx`, `cy`).
+ * the block is vertically centered on (`cx`, `cy`). `anchor` is the
+ * horizontal anchor for the text (default "middle").
  */
 function labelTextSvg(
   label: string,
@@ -121,7 +127,8 @@ function labelTextSvg(
   cy: number,
   fontSize: number,
   fill: string,
-  fontWeight: string
+  fontWeight: string,
+  anchor: "middle" | "start" = "middle"
 ): string {
   const lines = label.split("\n");
   const lineHeight = fontSize * 1.2;
@@ -132,13 +139,34 @@ function labelTextSvg(
         `<tspan x="${cx.toFixed(1)}" dy="${(index === 0 ? firstDy : lineHeight).toFixed(1)}">${escapeXml(line)}</tspan>`
     )
     .join("");
-  return `<text x="${cx.toFixed(1)}" y="${cy.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="${fontSize}" font-weight="${escapeXml(fontWeight)}" fill="${escapeXml(fill)}">${tspans}</text>`;
+  return `<text x="${cx.toFixed(1)}" y="${cy.toFixed(1)}" text-anchor="${anchor}" dominant-baseline="central" font-family="sans-serif" font-size="${fontSize}" font-weight="${escapeXml(fontWeight)}" fill="${escapeXml(fill)}">${tspans}</text>`;
 }
 
 /** Canvas rect of a node, resolving fresh (0-sized) nodes to the defaults. */
-function nodeRect(node: DiagramNode): NodeRect {
+function nodeRect(
+  node: DiagramNode,
+  byId: Map<string, DiagramNode>
+): NodeRect {
   const { width, height } = resolveNodeSize(node.width, node.height);
-  return { x: node.position.x, y: node.position.y, width, height };
+  const position = absoluteNodePosition(node, byId);
+  return { x: position.x, y: position.y, width, height };
+}
+
+/** SVG markup for a group container: dashed outline with its label. */
+function groupNodeSvg(node: DiagramNode, rect: NodeRect): string {
+  const label = labelTextSvg(
+    node.data.label,
+    rect.x + 8,
+    rect.y + 16,
+    12,
+    "#6b7280",
+    "600",
+    "start"
+  );
+  return (
+    `<rect x="${rect.x.toFixed(1)}" y="${rect.y.toFixed(1)}" width="${rect.width.toFixed(1)}" height="${rect.height.toFixed(1)}" rx="8" fill="rgba(107, 114, 128, 0.06)" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="6 4" />` +
+    label
+  );
 }
 
 /** True when the node data carries a shape (today every node does). */
@@ -147,8 +175,12 @@ function isShapeNodeData(data: BaseNodeData): data is BaseShapeNodeData {
 }
 
 /** SVG markup for one node (shape + centered label). */
-function nodeSvg(node: DiagramNode): string {
-  const rect = nodeRect(node);
+function nodeSvg(
+  node: DiagramNode,
+  byId: Map<string, DiagramNode>
+): string {
+  const rect = nodeRect(node, byId);
+  if (node.type === GROUP_NODE_TYPE) return groupNodeSvg(node, rect);
   const style = resolveNodeStyle(node.data.style);
   const shape = isShapeNodeData(node.data) ? node.data.shape : undefined;
   const polygonPoints = shape === undefined ? null : shapePolygonPoints(shape);
@@ -207,8 +239,8 @@ export function buildDiagramSvg(diagram: Diagram): string {
       if (source === undefined || target === undefined) return "";
       const style = resolveEdgeStyle(edge.data?.style);
       const path = computeEdgePath(
-        nodeRect(source),
-        nodeRect(target),
+        nodeRect(source, byId),
+        nodeRect(target, byId),
         style.lineType
       );
       const marker =
@@ -240,7 +272,16 @@ export function buildDiagramSvg(diagram: Diagram): string {
     })
     .join("");
 
-  const nodeMarkup = diagram.nodes.map(nodeSvg).join("");
+  // Group containers render under their members.
+  const groups = diagram.nodes.filter(
+    (node) => node.type === GROUP_NODE_TYPE
+  );
+  const members = diagram.nodes.filter(
+    (node) => node.type !== GROUP_NODE_TYPE
+  );
+  const nodeMarkup = [...groups, ...members]
+    .map((node) => nodeSvg(node, byId))
+    .join("");
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${bounds.width}" height="${bounds.height}" viewBox="${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}">` +

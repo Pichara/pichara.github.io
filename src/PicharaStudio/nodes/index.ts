@@ -7,6 +7,8 @@
 
 import type { NodeTypes } from "@xyflow/react";
 import BaseShapeNode from "./base/BaseShapeNode";
+import GroupNode from "./group/GroupNode";
+import { GROUP_NODE_TYPE } from "../constants";
 
 export const customNodeTypes: NodeTypes = {
   "shape-rectangle": BaseShapeNode,
@@ -16,4 +18,5 @@ export const customNodeTypes: NodeTypes = {
   "shape-parallelogram": BaseShapeNode,
   "shape-hexagon": BaseShapeNode,
   "shape-pentagon": BaseShapeNode,
+  [GROUP_NODE_TYPE]: GroupNode,
 };

@@ -33,7 +33,12 @@ import type {
   Viewport,
 } from "../types";
 import { DEFAULT_VIEWPORT, createDefaultMetadata } from "../constants";
+import {
+  DEFAULT_GROUP_LABEL,
+  GROUP_NODE_TYPE,
+} from "../constants/defaults";
 import { generateId } from "../utils/generate-id";
+import { groupNodes, ungroupNodes } from "../utils/grouping";
 import {
   applyEdgeStyle,
   applyNodeStyle,
@@ -171,6 +176,21 @@ interface DiagramStore {
    * one paste step, without touching the clipboard. Records one undo step.
    */
   duplicateSelection: () => void;
+
+  /**
+   * Wrap the selected nodes in a group container: the group hugs the
+   * selection's bounding box and dragging it moves the members together.
+   * Needs at least two selected top-level nodes (nodes already inside a
+   * group stay where they are). Records one undo step.
+   */
+  groupSelection: () => void;
+
+  /**
+   * Dissolve each selected group: the container goes away and its
+   * members stay exactly where they were, selected. Records one undo
+   * step. No-op when no group node is selected.
+   */
+  ungroupSelection: () => void;
 
   /**
    * Line the selected nodes up with each other (left, center, right,
@@ -407,9 +427,41 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     }));
   },
 
+  groupSelection: () => {
+    const { diagram } = get();
+    const grouped = groupNodes(
+      diagram.nodes,
+      generateId(),
+      DEFAULT_GROUP_LABEL
+    );
+    if (grouped === null) return;
+    recordHistory(diagram);
+    set((state) => ({
+      diagram: { ...state.diagram, nodes: grouped },
+    }));
+  },
+
+  ungroupSelection: () => {
+    const { diagram } = get();
+    const groupIds = diagram.nodes
+      .filter((node) => node.selected && node.type === GROUP_NODE_TYPE)
+      .map((node) => node.id);
+    const ungrouped = ungroupNodes(diagram.nodes, groupIds);
+    if (ungrouped === null) return;
+    recordHistory(diagram);
+    set((state) => ({
+      diagram: { ...state.diagram, nodes: ungrouped },
+    }));
+  },
+
   alignSelection: (kind) => {
     const { diagram } = get();
     const selected = diagram.nodes.filter((node) => node.selected);
+    // Align/distribute only make sense in one coordinate space: a child
+    // node's position is relative to its group, a top-level node's is
+    // absolute, so mixing them would move shapes to wrong places.
+    const parents = new Set(selected.map((node) => node.parentId));
+    if (parents.size > 1) return;
     const moves = alignNodes(selected, kind);
     if (moves.length === 0) return;
     const positions = new Map(moves.map((move) => [move.id, move.position]));
@@ -428,6 +480,9 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
   distributeSelection: (axis) => {
     const { diagram } = get();
     const selected = diagram.nodes.filter((node) => node.selected);
+    // Same coordinate-space rule as alignSelection (see above).
+    const parents = new Set(selected.map((node) => node.parentId));
+    if (parents.size > 1) return;
     const moves = distributeNodes(selected, axis);
     if (moves.length === 0) return;
     const positions = new Map(moves.map((move) => [move.id, move.position]));

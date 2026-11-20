@@ -66,6 +66,19 @@ export const MIN_NODE_HEIGHT = 40;
 export const GRID_SIZE = 15;
 
 // ---------------------------------------------------------------------------
+// Groups
+// ---------------------------------------------------------------------------
+
+/** React Flow node type key for group container nodes. */
+export const GROUP_NODE_TYPE = "group";
+
+/** Default label for a newly created group. */
+export const DEFAULT_GROUP_LABEL = "Group";
+
+/** Padding (canvas px) between a group's border and its children. */
+export const GROUP_PADDING = 24;
+
+// ---------------------------------------------------------------------------
 // Edges
 // ---------------------------------------------------------------------------
 

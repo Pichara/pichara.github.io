@@ -7,6 +7,7 @@
  * - Ctrl/Cmd+C: copy the selection
  * - Ctrl/Cmd+V: paste the clipboard
  * - Ctrl/Cmd+D: duplicate the selection
+ * - Ctrl/Cmd+G: group the selection (Ctrl/Cmd+Shift+G ungroups)
  * - Ctrl/Cmd+A: select all nodes and edges
  * - Ctrl/Cmd+0: zoom to fit the whole diagram
  *
@@ -57,6 +58,12 @@ export function useKeyboardShortcuts(): void {
           // claims it for duplicating the selection instead.
           event.preventDefault();
           store.duplicateSelection();
+        } else if (key === "g" && !event.shiftKey) {
+          event.preventDefault();
+          store.groupSelection();
+        } else if (key === "g" && event.shiftKey) {
+          event.preventDefault();
+          store.ungroupSelection();
         } else if (key === "a") {
           // Ctrl+A would select the page text; the editor claims it
           // for selecting every node and edge instead.

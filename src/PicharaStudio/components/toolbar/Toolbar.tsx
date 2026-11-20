@@ -11,6 +11,7 @@ import { useCallback, useRef, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { useDiagramStore } from "../../stores/diagramStore";
 import { useHistoryStore } from "../../stores/historyStore";
+import { GROUP_NODE_TYPE } from "../../constants";
 import DiagramLibraryDialog from "../dialogs/DiagramLibraryDialog";
 import {
   exportDiagramAsJson,
@@ -38,6 +39,21 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
     state.diagram.nodes.some((node) => node.selected)
   );
   const hasClipboard = useDiagramStore((state) => state.clipboard !== null);
+  const groupSelection = useDiagramStore((state) => state.groupSelection);
+  const ungroupSelection = useDiagramStore(
+    (state) => state.ungroupSelection
+  );
+  const canGroup = useDiagramStore(
+    (state) =>
+      state.diagram.nodes.filter(
+        (node) => node.selected && node.parentId === undefined
+      ).length >= 2
+  );
+  const canUngroup = useDiagramStore((state) =>
+    state.diagram.nodes.some(
+      (node) => node.selected && node.type === GROUP_NODE_TYPE
+    )
+  );
   const hasNodes = useDiagramStore(
     (state) => state.diagram.nodes.length > 0
   );
@@ -224,6 +240,32 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
           aria-label="Duplicate selection"
         >
           Duplicate
+        </button>
+      </div>
+      <div
+        className="studio-toolbar__group"
+        role="group"
+        aria-label="Group and ungroup"
+      >
+        <button
+          type="button"
+          className="studio-button"
+          onClick={groupSelection}
+          disabled={!canGroup}
+          title="Group the selection so it moves together (Ctrl+G)"
+          aria-label="Group selection"
+        >
+          Group
+        </button>
+        <button
+          type="button"
+          className="studio-button"
+          onClick={ungroupSelection}
+          disabled={!canUngroup}
+          title="Ungroup the selected group (Ctrl+Shift+G)"
+          aria-label="Ungroup selection"
+        >
+          Ungroup
         </button>
       </div>
       <div

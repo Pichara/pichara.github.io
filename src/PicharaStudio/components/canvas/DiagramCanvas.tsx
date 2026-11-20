@@ -138,6 +138,14 @@ export default function DiagramCanvas() {
         // on undo. Leaving React Flow's default on would double-record
         // the deletion in history.
         deleteKeyCode={null}
+        // Marquee multi-select: dragging on empty canvas draws a
+        // selection box (Lucidchart-style) instead of panning. Panning
+        // moves to the middle/right mouse button (`panOnDrag`) and to
+        // Space+drag (React Flow's default pan key); `selectionOnDrag`
+        // has no effect while the left button pans, so the two props
+        // must change together.
+        selectionOnDrag
+        panOnDrag={[1, 2]}
         // No `fitView` prop: in React Flow v13 the prop queues a fit until the
         // nodes finish initializing, so the first node added to an empty
         // canvas would re-center and zoom the camera (up to 400% for a

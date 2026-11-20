@@ -105,6 +105,39 @@ test("buildDiagramSvg renders an empty diagram as a blank canvas", () => {
   assert.doesNotMatch(svg, /<polygon|<ellipse/);
 });
 
+test("buildDiagramSvg draws group members at absolute positions under the group outline", () => {
+  const diagram = fixtureDiagram();
+  // n1 joins a group at (76, 26); its stored position is relative.
+  diagram.nodes = [
+    {
+      id: "g1",
+      type: "group",
+      position: { x: 76, y: 26 },
+      width: 228,
+      height: 108,
+      data: { label: "Group" },
+    },
+    {
+      ...diagram.nodes[0],
+      position: { x: 24, y: 24 },
+      parentId: "g1",
+    },
+    diagram.nodes[1],
+  ];
+  const svg = buildDiagramSvg(diagram);
+  // Group outline (dashed) comes before the member shape in the markup.
+  const groupIndex = svg.indexOf('stroke-dasharray="6 4"');
+  const memberIndex = svg.indexOf(">Start &lt;here&gt;<");
+  assert.ok(groupIndex !== -1, "group outline missing");
+  assert.ok(memberIndex !== -1, "member label missing");
+  assert.ok(groupIndex < memberIndex, "group must render under its members");
+  assert.match(svg, />Group</);
+  // The member rect is at its absolute position (100, 50), not (24, 24).
+  assert.match(svg, /<rect x="100\.0" y="50\.0" width="180\.0" height="60\.0"/);
+  // Bounds cover the group, so the viewBox starts at the group minus padding.
+  assert.match(svg, /viewBox="36 -14 /);
+});
+
 // --- helpers ---------------------------------------------------------------
 
 test("escapeXml escapes markup characters", () => {

@@ -61,15 +61,35 @@ function cloneEdgeData(edge: DiagramEdge): DiagramEdge["data"] {
  * Snapshot the current selection for the clipboard: deep copies of the
  * selected nodes and of the edges whose *both* ends are selected
  * (dangling edges are dropped — a paste must never reference a node
- * that was not copied). Selection flags are cleared in the snapshot;
- * pasting re-selects the clones.
+ * that was not copied). A selected group brings its children along,
+ * so a pasted group still contains its shapes. Selection flags are
+ * cleared in the snapshot; pasting re-selects the clones.
  */
 export function snapshotSelection(
   nodes: DiagramNode[],
   edges: DiagramEdge[]
 ): SelectionSnapshot {
-  const selectedNodes = nodes.filter((node) => node.selected);
-  const selectedIds = new Set(selectedNodes.map((node) => node.id));
+  const selectedIds = new Set(
+    nodes.filter((node) => node.selected).map((node) => node.id)
+  );
+  // Children of a selected group are copied with it, even when they
+  // are not selected themselves; repeat until no new node joins, so
+  // nested groups bring their whole subtree regardless of array order.
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const node of nodes) {
+      if (
+        node.parentId !== undefined &&
+        selectedIds.has(node.parentId) &&
+        !selectedIds.has(node.id)
+      ) {
+        selectedIds.add(node.id);
+        grew = true;
+      }
+    }
+  }
+  const selectedNodes = nodes.filter((node) => selectedIds.has(node.id));
   return {
     nodes: selectedNodes.map((node) => ({
       ...node,
@@ -92,8 +112,10 @@ export function snapshotSelection(
 /**
  * Clone a snapshot into fresh elements: new ids (via `newId`), positions
  * shifted by `offset` on both axes, and edges re-pointed at the cloned
- * node ids. The clones come back selected. The snapshot itself is not
- * mutated, so the same clipboard can be pasted again.
+ * node ids. A cloned child keeps pointing at its cloned group
+ * (`parentId` is remapped the same way). The clones come back selected.
+ * The snapshot itself is not mutated, so the same clipboard can be
+ * pasted again.
  */
 export function cloneSelection(
   snapshot: SelectionSnapshot,
@@ -107,6 +129,10 @@ export function cloneSelection(
     nodes: snapshot.nodes.map((node) => ({
       ...node,
       id: idMap.get(node.id) ?? node.id,
+      parentId:
+        node.parentId === undefined
+          ? undefined
+          : (idMap.get(node.parentId) ?? node.parentId),
       position: {
         x: node.position.x + offset,
         y: node.position.y + offset,
@@ -157,8 +183,9 @@ function nodeBox(node: DiagramNode): NodeBox {
 /**
  * Remove the current selection: selected nodes go away, and so do
  * selected edges plus any edge attached to a removed node (an edge must
- * never dangle). Unselected, unattached elements are kept as-is.
- * Returns new arrays; the inputs are not mutated.
+ * never dangle). Deleting a group also deletes its children, so no node
+ * is left pointing at a missing parent. Unselected, unattached elements
+ * are kept as-is. Returns new arrays; the inputs are not mutated.
  */
 export function removeSelection(
   nodes: DiagramNode[],
@@ -167,8 +194,25 @@ export function removeSelection(
   const removedIds = new Set(
     nodes.filter((node) => node.selected).map((node) => node.id)
   );
+  // Children of a removed group go away with it; repeat until no new
+  // node joins, so nested groups take their whole subtree with them
+  // regardless of array order.
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const node of nodes) {
+      if (
+        node.parentId !== undefined &&
+        removedIds.has(node.parentId) &&
+        !removedIds.has(node.id)
+      ) {
+        removedIds.add(node.id);
+        grew = true;
+      }
+    }
+  }
   return {
-    nodes: nodes.filter((node) => !node.selected),
+    nodes: nodes.filter((node) => !removedIds.has(node.id)),
     edges: edges.filter(
       (edge) =>
         !edge.selected &&
