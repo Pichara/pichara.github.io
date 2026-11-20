@@ -5,8 +5,13 @@
  * the middle, format panel on the right, status bar at the bottom. This
  * component is lazy-loaded by the router, so the portfolio never downloads
  * editor code until the user opens /diagram.
+ *
+ * On narrow screens (< 768px) the two side panels become overlay drawers:
+ * hidden until opened from the toolbar, so the canvas keeps the full
+ * width. See DiagramStudio.css for the breakpoint rules.
  */
 
+import { useState } from "react";
 import Toolbar from "./toolbar/Toolbar";
 import ShapeLibrary from "./sidebar/ShapeLibrary";
 import DiagramCanvas from "./canvas/DiagramCanvas";
@@ -14,21 +19,41 @@ import FormatPanel from "./panels/FormatPanel";
 import StatusBar from "./status-bar/StatusBar";
 import { useDiagramPersistence } from "../hooks/useDiagramPersistence";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import {
+  toggleMobilePanel,
+  type MobilePanel,
+} from "../utils/mobile-panels";
 import "./DiagramStudio.css";
 
 export default function DiagramStudio() {
   const { saveFailed } = useDiagramPersistence();
   useKeyboardShortcuts();
 
+  // Which side panel is open as an overlay drawer on narrow screens.
+  // Ignored on desktop, where both panels are always visible.
+  const [mobilePanel, setMobilePanel] = useState<MobilePanel | null>(null);
+
   return (
     <div className="studio-root">
-      <Toolbar saveFailed={saveFailed} />
+      <Toolbar
+        saveFailed={saveFailed}
+        mobilePanel={mobilePanel}
+        onToggleMobilePanel={(panel) =>
+          setMobilePanel((current) => toggleMobilePanel(current, panel))
+        }
+      />
       <main className="studio-main">
-        <ShapeLibrary />
+        <ShapeLibrary
+          isMobileOpen={mobilePanel === "shapes"}
+          onClose={() => setMobilePanel(null)}
+        />
         <div className="studio-main__canvas">
           <DiagramCanvas />
         </div>
-        <FormatPanel />
+        <FormatPanel
+          isMobileOpen={mobilePanel === "format"}
+          onClose={() => setMobilePanel(null)}
+        />
       </main>
       <StatusBar />
     </div>

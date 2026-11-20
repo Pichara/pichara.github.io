@@ -19,13 +19,22 @@ import {
   exportDiagramAsSvg,
 } from "../../services/export/diagram-export";
 import { parseDiagramJson } from "../../services/import/diagram-import";
+import type { MobilePanel } from "../../utils/mobile-panels";
 
 interface ToolbarProps {
   /** True when the most recent LocalStorage autosave failed. */
   saveFailed: boolean;
+  /** Which side panel is open as an overlay drawer on narrow screens. */
+  mobilePanel: MobilePanel | null;
+  /** Toggles a side panel drawer (narrow screens only; no-op visually on desktop). */
+  onToggleMobilePanel: (panel: MobilePanel) => void;
 }
 
-export default function Toolbar({ saveFailed }: ToolbarProps) {
+export default function Toolbar({
+  saveFailed,
+  mobilePanel,
+  onToggleMobilePanel,
+}: ToolbarProps) {
   const diagram = useDiagramStore((state) => state.diagram);
   const loadDiagram = useDiagramStore((state) => state.loadDiagram);
   const newDiagram = useDiagramStore((state) => state.newDiagram);
@@ -144,6 +153,34 @@ export default function Toolbar({ saveFailed }: ToolbarProps) {
           {fileError}
         </span>
       ) : null}
+      <div
+        className="studio-toolbar__panels"
+        role="group"
+        aria-label="Side panels"
+      >
+        <button
+          type="button"
+          className="studio-button studio-toolbar__panel-toggle"
+          onClick={() => onToggleMobilePanel("shapes")}
+          aria-pressed={mobilePanel === "shapes"}
+          aria-expanded={mobilePanel === "shapes"}
+          title="Open the shape library"
+          aria-label="Toggle shape library"
+        >
+          Shapes
+        </button>
+        <button
+          type="button"
+          className="studio-button studio-toolbar__panel-toggle"
+          onClick={() => onToggleMobilePanel("format")}
+          aria-pressed={mobilePanel === "format"}
+          aria-expanded={mobilePanel === "format"}
+          title="Open the format panel"
+          aria-label="Toggle format panel"
+        >
+          Format
+        </button>
+      </div>
       <div
         className="studio-toolbar__history"
         role="group"

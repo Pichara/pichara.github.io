@@ -66,7 +66,17 @@ function ShapePreview({ shape }: { shape: ShapeKind }) {
   );
 }
 
-export default function ShapeLibrary() {
+interface ShapeLibraryProps {
+  /** True when the library is open as an overlay drawer (narrow screens). */
+  isMobileOpen?: boolean;
+  /** Closes the overlay drawer (narrow screens). */
+  onClose?: () => void;
+}
+
+export default function ShapeLibrary({
+  isMobileOpen = false,
+  onClose,
+}: ShapeLibraryProps) {
   const addNode = useDiagramStore((state) => state.addNode);
   const viewport = useDiagramStore((state) => state.diagram.viewport);
   const spawnOffset = useDiagramStore((state) => state.spawnOffset);
@@ -84,8 +94,11 @@ export default function ShapeLibrary() {
         ? snapPosition(rawPosition, GRID_SIZE)
         : rawPosition;
       addNode(shape, position);
+      // On a phone the library is an overlay drawer: close it so the
+      // new shape on the canvas is visible right away.
+      onClose?.();
     },
-    [addNode, viewport, spawnOffset, snapToGrid]
+    [addNode, viewport, spawnOffset, snapToGrid, onClose]
   );
 
   const handleDragStart = useCallback(
@@ -97,7 +110,18 @@ export default function ShapeLibrary() {
   );
 
   return (
-    <aside className="shape-library" aria-label="Shape library">
+    <aside
+      className={`shape-library${isMobileOpen ? " is-mobile-open" : ""}`}
+      aria-label="Shape library"
+    >
+      <button
+        type="button"
+        className="studio-button studio-panel__close"
+        onClick={onClose}
+        aria-label="Close shape library"
+      >
+        ✕ Close
+      </button>
       {SHAPE_LIBRARY.map((category) => (
         <section key={category.title}>
           <h2 className="shape-library__section-title">{category.title}</h2>

@@ -124,7 +124,17 @@ function SelectField({ label, value, options, onChange }: SelectFieldProps) {
   );
 }
 
-export default function FormatPanel() {
+interface FormatPanelProps {
+  /** True when the panel is open as an overlay drawer (narrow screens). */
+  isMobileOpen?: boolean;
+  /** Closes the overlay drawer (narrow screens). */
+  onClose?: () => void;
+}
+
+export default function FormatPanel({
+  isMobileOpen = false,
+  onClose,
+}: FormatPanelProps) {
   // These selectors build new arrays, so useShallow keeps the snapshot
   // referentially stable: without it, Zustand v5's useSyncExternalStore
   // sees a new snapshot on every render and re-renders in a loop until
@@ -195,7 +205,18 @@ export default function FormatPanel() {
     selectedNodes.length > 0 || selectedEdges.length > 0;
 
   return (
-    <aside className="format-panel" aria-label="Format">
+    <aside
+      className={`format-panel${isMobileOpen ? " is-mobile-open" : ""}`}
+      aria-label="Format"
+    >
+      <button
+        type="button"
+        className="studio-button studio-panel__close"
+        onClick={onClose}
+        aria-label="Close format panel"
+      >
+        ✕ Close
+      </button>
       <h2 className="format-panel__title">Format</h2>
 
       {!hasSelection ? (

@@ -20,7 +20,7 @@ export default function StatusBar() {
       </span>
       <span>{Math.round(zoom * 100)}%</span>
       <span className="studio-status-bar__spacer" />
-      <span>Autosaves locally</span>
+      <span className="studio-status-bar__autosave">Autosaves locally</span>
     </footer>
   );
 }

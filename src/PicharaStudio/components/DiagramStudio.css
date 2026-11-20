@@ -617,3 +617,92 @@
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
 }
+
+/* --- Mobile layout (narrow screens) --- */
+
+/* Panel toggle buttons in the toolbar and the close button inside each
+   panel only exist for the drawer layout below; on desktop both panels
+   are always-visible sidebars, so these controls stay hidden. */
+.studio-toolbar__panels {
+  display: flex;
+  gap: 8px;
+}
+
+.studio-toolbar__panel-toggle {
+  display: none;
+}
+
+.studio-panel__close {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* The toolbar holds ~20 buttons: let it scroll sideways instead of
+     cutting content off at the right edge. */
+  .studio-toolbar {
+    overflow-x: auto;
+  }
+
+  .studio-toolbar > * {
+    flex: none;
+  }
+
+  .studio-toolbar__panel-toggle {
+    display: inline-block;
+  }
+
+  /* The diagram name is also shown in the Diagrams dialog; hiding it
+     here keeps the Shapes/Format toggles visible without scrolling. */
+  .studio-toolbar__diagram-name {
+    display: none;
+  }
+
+  /* Both side panels leave the flex row and become overlay drawers
+     anchored under the toolbar and above the status bar, so the canvas
+     keeps the full screen width. Hidden until opened from the toolbar. */
+  .shape-library,
+  .format-panel {
+    display: none;
+    position: fixed;
+    top: 48px;
+    bottom: 28px;
+    z-index: 30;
+    width: min(280px, 85vw);
+    box-shadow: 0 8px 24px rgba(31, 41, 55, 0.25);
+  }
+
+  .shape-library {
+    left: 0;
+  }
+
+  .format-panel {
+    right: 0;
+  }
+
+  .shape-library.is-mobile-open,
+  .format-panel.is-mobile-open {
+    display: flex;
+  }
+
+  .studio-panel__close {
+    display: inline-block;
+    align-self: flex-end;
+  }
+
+  /* The minimap would cover a large share of a phone-sized canvas. */
+  .studio-canvas .react-flow__minimap {
+    display: none;
+  }
+}
+
+@media (max-width: 479px) {
+  .studio-status-bar__autosave {
+    display: none;
+  }
+
+  /* On a phone the back link plus the two panel toggles fill the bar;
+     the app title is redundant here. */
+  .studio-toolbar__title {
+    display: none;
+  }
+}
