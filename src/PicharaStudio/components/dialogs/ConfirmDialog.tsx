@@ -9,9 +9,20 @@
  * phase, so it wins over the editor's own Esc handler, which clears the
  * selection), backdrop click and ✕ cancel; the Cancel button starts
  * focused, so Enter never confirms by accident.
+ *
+ * Rendered in a portal to `document.body`: the dialog is opened from
+ * inside the toolbar, whose `backdrop-filter` makes it the containing
+ * block of `position: fixed` descendants (and its own stacking context),
+ * so without the portal the backdrop would cover only the 48px toolbar
+ * strip and the dialog would paint underneath the canvas — present in
+ * the DOM but invisible and unclickable. Tab is trapped inside the
+ * dialog (see `utils/focus-trap.ts`) so keyboard focus cannot wander to
+ * the page behind it.
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { FOCUSABLE_SELECTOR, trapTab } from "../../utils/focus-trap";
 
 interface ConfirmDialogProps {
   /** Dialog title. */
@@ -39,25 +50,44 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
         onCancel();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (dialog === null) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      );
+      const target = trapTab(
+        focusable,
+        document.activeElement as HTMLElement | null,
+        event.shiftKey,
+      );
+      if (target !== null) {
+        event.preventDefault();
+        target.focus();
       }
     };
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [onCancel]);
 
-  return (
+  return createPortal(
     <div
       className="diagram-library-dialog__backdrop"
       onClick={onCancel}
       role="presentation"
     >
       <div
+        ref={dialogRef}
         className="diagram-library-dialog confirm-dialog"
         role="dialog"
         aria-modal="true"
@@ -96,6 +126,7 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

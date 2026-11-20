@@ -20,6 +20,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { useDiagramStore } from "../../stores/diagramStore";
 import ConfirmDialog from "./ConfirmDialog";
 import { TEMPLATES } from "../../services/templates";
@@ -193,7 +194,13 @@ export default function DiagramLibraryDialog({
     setPendingAction(null);
   }, [pendingAction, runUseTemplate, runOpen, runDelete]);
 
-  return (
+  // Portal to `document.body`: this dialog is opened from inside the
+  // toolbar, whose `backdrop-filter` makes it the containing block of
+  // `position: fixed` descendants (and its own stacking context) — the
+  // same reason ConfirmDialog is portaled. Without it the backdrop
+  // covers only the 48px toolbar strip and the dialog paints underneath
+  // the canvas, invisible and unclickable.
+  return createPortal(
     <div
       className="diagram-library-dialog__backdrop"
       onClick={onClose}
@@ -334,6 +341,7 @@ export default function DiagramLibraryDialog({
           onCancel={() => setPendingAction(null)}
         />
       ) : null}
-    </div>
+    </div>,
+    document.body,
   );
 }
