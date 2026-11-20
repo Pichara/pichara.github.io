@@ -275,8 +275,9 @@ function edgeSvg(
 }
 
 /**
- * Build a standalone SVG document for the diagram: white background,
- * edges (under the nodes, with arrowheads and labels), then nodes.
+ * Build a standalone SVG document for the diagram: dark background
+ * (#030a07, matching the canvas), edges (under the nodes, with
+ * arrowheads and labels), then nodes.
  * Coordinates are in canvas space; the viewBox is the padded bounds.
  */
 export function buildDiagramSvg(diagram: Diagram): string {
@@ -374,8 +375,8 @@ function loadImage(url: string): Promise<HTMLImageElement> {
 
 /**
  * Download the diagram as a PNG (the SVG rasterized on a canvas at 2x
- * scale, on a white background). Rejects when the browser cannot render
- * the image.
+ * scale, on the dark #030a07 background). Rejects when the browser
+ * cannot render the image.
  */
 export async function exportDiagramAsPng(diagram: Diagram): Promise<void> {
   const bounds = diagramExportBounds(diagram);
