@@ -305,30 +305,128 @@
   white-space: nowrap;
 }
 
+.studio-toolbar__spacer {
+  flex: 1 1 auto;
+}
+
+.studio-toolbar__divider {
+  width: 1px;
+  height: 24px;
+  background: #e5e7eb;
+  flex: none;
+}
+
 .studio-toolbar__history {
   display: flex;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.studio-toolbar__clipboard {
-  display: flex;
-  gap: 8px;
-}
-
-.studio-toolbar__group {
-  display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .studio-toolbar__view {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
-.studio-toolbar__export {
+/* --- File menu (dropdown) --- */
+
+.studio-toolbar__menu {
+  position: relative;
+  flex: none;
+}
+
+/* Positioned `fixed` from the button's bounding rect (see FileMenu.tsx)
+   so the dropdown is never clipped by the toolbar's horizontal scroll
+   on narrow screens. */
+.studio-toolbar__menu-list {
+  position: fixed;
+  z-index: 40;
+  min-width: 200px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.18);
+}
+
+.studio-toolbar__menu-item {
+  appearance: none;
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.studio-toolbar__menu-item:hover {
+  background: #f3f4f6;
+}
+
+.studio-toolbar__menu-item:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+.studio-toolbar__menu-separator {
+  height: 1px;
+  margin: 4px 6px;
+  background: #e5e7eb;
+}
+
+/* --- Floating selection toolbar --- */
+
+/* Absolutely positioned inside the React Flow wrapper, next to the
+   current selection (see SelectionToolbar.tsx). Only visible when a
+   selection or clipboard content makes its actions relevant. */
+.selection-toolbar {
+  position: absolute;
+  z-index: 10;
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(31, 41, 55, 0.18);
+}
+
+.selection-toolbar__button {
+  appearance: none;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #1f2937;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.selection-toolbar__button:hover {
+  background: #f3f4f6;
+}
+
+.selection-toolbar__button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+.selection-toolbar__divider {
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
+  flex: none;
+  margin: 0 2px;
 }
 
 .studio-button {
@@ -648,7 +746,7 @@
 }
 
 @media (max-width: 767px) {
-  /* The toolbar holds ~20 buttons: let it scroll sideways instead of
+  /* The toolbar holds ~10 buttons: let it scroll sideways instead of
      cutting content off at the right edge. */
   .studio-toolbar {
     overflow-x: auto;

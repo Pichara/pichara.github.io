@@ -1,10 +1,13 @@
 /**
  * Toolbar — top bar of the diagram editor.
  *
- * Shapes live in the left sidebar (`components/sidebar/ShapeLibrary.tsx`);
- * this bar holds navigation, undo/redo, export/import, and "New" (starts
- * an empty diagram with a confirm step, since autosave will replace the
- * saved diagram).
+ * Kept deliberately slim: navigation, undo/redo, view controls, and a
+ * "File" menu. Shapes live in the left sidebar
+ * (`components/sidebar/ShapeLibrary.tsx`); selection actions (Copy,
+ * Duplicate, Group, Ungroup, Paste) live in the floating bar that
+ * appears next to the selection (`components/canvas/SelectionToolbar.tsx`),
+ * and file actions (New, Diagrams, Import, Export) live in the File
+ * menu — so the top bar shows only what is always relevant.
  */
 
 import {
@@ -17,8 +20,8 @@ import {
 import { Link } from "react-router-dom";
 import { useDiagramStore } from "../../stores/diagramStore";
 import { useHistoryStore } from "../../stores/historyStore";
-import { GROUP_NODE_TYPE } from "../../constants";
 import DiagramLibraryDialog from "../dialogs/DiagramLibraryDialog";
+import FileMenu from "./FileMenu";
 import {
   exportDiagramAsJson,
   exportDiagramAsPng,
@@ -104,30 +107,6 @@ export default function Toolbar({
   const diagram = useDiagramStore((state) => state.diagram);
   const loadDiagram = useDiagramStore((state) => state.loadDiagram);
   const newDiagram = useDiagramStore((state) => state.newDiagram);
-  const copySelection = useDiagramStore((state) => state.copySelection);
-  const pasteClipboard = useDiagramStore((state) => state.pasteClipboard);
-  const duplicateSelection = useDiagramStore(
-    (state) => state.duplicateSelection
-  );
-  const hasNodeSelection = useDiagramStore((state) =>
-    state.diagram.nodes.some((node) => node.selected)
-  );
-  const hasClipboard = useDiagramStore((state) => state.clipboard !== null);
-  const groupSelection = useDiagramStore((state) => state.groupSelection);
-  const ungroupSelection = useDiagramStore(
-    (state) => state.ungroupSelection
-  );
-  const canGroup = useDiagramStore(
-    (state) =>
-      state.diagram.nodes.filter(
-        (node) => node.selected && node.parentId === undefined
-      ).length >= 2
-  );
-  const canUngroup = useDiagramStore((state) =>
-    state.diagram.nodes.some(
-      (node) => node.selected && node.type === GROUP_NODE_TYPE
-    )
-  );
   const hasNodes = useDiagramStore(
     (state) => state.diagram.nodes.length > 0
   );
@@ -240,6 +219,7 @@ export default function Toolbar({
           Format
         </ToolbarButton>
       </ToolbarGroup>
+      <span className="studio-toolbar__spacer" aria-hidden="true" />
       <ToolbarGroup label="Undo and redo" className="studio-toolbar__history">
         <ToolbarButton
           onClick={undo}
@@ -258,6 +238,7 @@ export default function Toolbar({
           ↪ Redo
         </ToolbarButton>
       </ToolbarGroup>
+      <span className="studio-toolbar__divider" aria-hidden="true" />
       <ToolbarGroup label="View" className="studio-toolbar__view">
         <ToolbarButton
           onClick={requestFitView}
@@ -284,96 +265,23 @@ export default function Toolbar({
           Snap
         </ToolbarButton>
       </ToolbarGroup>
-      <ToolbarGroup
-        label="Copy, paste and duplicate"
-        className="studio-toolbar__clipboard"
-      >
-        <ToolbarButton
-          onClick={copySelection}
-          disabled={!hasNodeSelection}
-          title="Copy selection (Ctrl+C)"
-          ariaLabel="Copy selection"
-        >
-          Copy
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={pasteClipboard}
-          disabled={!hasClipboard}
-          title="Paste (Ctrl+V)"
-          ariaLabel="Paste"
-        >
-          Paste
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={duplicateSelection}
-          disabled={!hasNodeSelection}
-          title="Duplicate selection (Ctrl+D)"
-          ariaLabel="Duplicate selection"
-        >
-          Duplicate
-        </ToolbarButton>
-      </ToolbarGroup>
-      <ToolbarGroup label="Group and ungroup" className="studio-toolbar__group">
-        <ToolbarButton
-          onClick={groupSelection}
-          disabled={!canGroup}
-          title="Group the selection so it moves together (Ctrl+G)"
-          ariaLabel="Group selection"
-        >
-          Group
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={ungroupSelection}
-          disabled={!canUngroup}
-          title="Ungroup the selected group (Ctrl+Shift+G)"
-          ariaLabel="Ungroup selection"
-        >
-          Ungroup
-        </ToolbarButton>
-      </ToolbarGroup>
-      <ToolbarGroup label="Export and import" className="studio-toolbar__export">
-        <ToolbarButton
-          onClick={() => exportDiagramAsJson(diagram)}
-          title="Download the diagram as a JSON file"
-        >
-          Export JSON
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => exportDiagramAsSvg(diagram)}
-          title="Download the diagram as an SVG image"
-        >
-          Export SVG
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={handleExportPng}
-          title="Download the diagram as a PNG image"
-        >
-          Export PNG
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={handleImportClick}
-          title="Open a diagram from a JSON file"
-        >
-          Import
-        </ToolbarButton>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json,application/json"
-          hidden
-          onChange={handleImportFile}
-          aria-label="Choose a diagram JSON file to import"
-        />
-      </ToolbarGroup>
-      <ToolbarButton
-        onClick={() => setShowLibrary(true)}
-        title="Open templates and your saved diagrams"
-      >
-        Diagrams
-      </ToolbarButton>
-      <ToolbarButton onClick={handleNewDiagram}>
-        New
-      </ToolbarButton>
+      <span className="studio-toolbar__divider" aria-hidden="true" />
+      <FileMenu
+        onNew={handleNewDiagram}
+        onOpenLibrary={() => setShowLibrary(true)}
+        onImport={handleImportClick}
+        onExportJson={() => exportDiagramAsJson(diagram)}
+        onExportSvg={() => exportDiagramAsSvg(diagram)}
+        onExportPng={handleExportPng}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json,application/json"
+        hidden
+        onChange={handleImportFile}
+        aria-label="Choose a diagram JSON file to import"
+      />
       {showLibrary ? (
         <DiagramLibraryDialog onClose={() => setShowLibrary(false)} />
       ) : null}

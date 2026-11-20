@@ -18,6 +18,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useDiagramStore } from "../../stores/diagramStore";
+import SelectionToolbar from "./SelectionToolbar";
 import { customNodeTypes } from "../../nodes";
 import {
   GRID_SIZE,
@@ -158,6 +159,7 @@ export default function DiagramCanvas() {
           <Background variant={BackgroundVariant.Dots} gap={GRID_SIZE} />
         ) : null}
         <FitViewController />
+        <SelectionToolbar />
         <Controls />
         <MiniMap />
       </ReactFlow>
