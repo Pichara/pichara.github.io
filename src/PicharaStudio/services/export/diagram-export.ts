@@ -154,12 +154,12 @@ function groupNodeSvg(node: DiagramNode, rect: NodeRect): string {
     rect.x + 8,
     rect.y + 16,
     12,
-    "#6b7280",
+    "#8ca893",
     "600",
     "start"
   );
   return (
-    `<rect x="${rect.x.toFixed(1)}" y="${rect.y.toFixed(1)}" width="${rect.width.toFixed(1)}" height="${rect.height.toFixed(1)}" rx="8" fill="rgba(107, 114, 128, 0.06)" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="6 4" />` +
+    `<rect x="${rect.x.toFixed(1)}" y="${rect.y.toFixed(1)}" width="${rect.width.toFixed(1)}" height="${rect.height.toFixed(1)}" rx="8" fill="rgba(124, 251, 176, 0.05)" stroke="#4bcc7b" stroke-width="1.5" stroke-dasharray="6 4" />` +
     label
   );
 }
@@ -262,7 +262,7 @@ function edgeSvg(
   const longest = Math.max(...lines.map((line) => line.length));
   const labelWidth = longest * fontSize * 0.55 + 10;
   const labelHeight = lines.length * fontSize * 1.25 + 6;
-  const rectMarkup = `<rect x="${(path.labelX - labelWidth / 2).toFixed(1)}" y="${(path.labelY - labelHeight / 2).toFixed(1)}" width="${labelWidth.toFixed(1)}" height="${labelHeight.toFixed(1)}" rx="4" fill="#ffffff" />`;
+  const rectMarkup = `<rect x="${(path.labelX - labelWidth / 2).toFixed(1)}" y="${(path.labelY - labelHeight / 2).toFixed(1)}" width="${labelWidth.toFixed(1)}" height="${labelHeight.toFixed(1)}" rx="4" fill="#071a0e" />`;
   const textMarkup = labelTextSvg(
     label,
     path.labelX,
@@ -303,7 +303,7 @@ export function buildDiagramSvg(diagram: Diagram): string {
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${bounds.width}" height="${bounds.height}" viewBox="${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}">` +
     `<defs>${markers}</defs>` +
-    `<rect x="${bounds.x}" y="${bounds.y}" width="${bounds.width}" height="${bounds.height}" fill="#ffffff" />` +
+    `<rect x="${bounds.x}" y="${bounds.y}" width="${bounds.width}" height="${bounds.height}" fill="#030a07" />` +
     edgeMarkup +
     nodeMarkup +
     `</svg>`
@@ -393,7 +393,7 @@ export async function exportDiagramAsPng(diagram: Diagram): Promise<void> {
     if (context === null) {
       throw new Error("Canvas is not available in this browser.");
     }
-    context.fillStyle = "#ffffff";
+    context.fillStyle = "#030a07";
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
     const png = await new Promise<Blob | null>((resolve) =>

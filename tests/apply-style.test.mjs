@@ -29,19 +29,19 @@ const edge = {
 test("resolveNodeStyle fills missing fields from the defaults", () => {
   const resolved = resolveNodeStyle({ backgroundColor: "#ff0000" });
   assert.equal(resolved.backgroundColor, "#ff0000");
-  assert.equal(resolved.borderColor, "#d1d5db");
+  assert.equal(resolved.borderColor, "#4bcc7b");
   assert.equal(resolved.borderWidth, 1);
-  assert.equal(resolved.textColor, "#1f2937");
+  assert.equal(resolved.textColor, "#eafff0");
   assert.equal(resolved.fontSize, 14);
 });
 
 test("resolveNodeStyle with no overrides returns the defaults", () => {
   assert.deepEqual(resolveNodeStyle(), {
-    backgroundColor: "#ffffff",
-    borderColor: "#d1d5db",
+    backgroundColor: "#071a0e",
+    borderColor: "#4bcc7b",
     borderWidth: 1,
     borderRadius: 8,
-    textColor: "#1f2937",
+    textColor: "#eafff0",
     fontSize: 14,
     fontWeight: "500",
     opacity: 1,
@@ -50,7 +50,7 @@ test("resolveNodeStyle with no overrides returns the defaults", () => {
 
 test("resolveEdgeStyle fills missing fields from the defaults", () => {
   const resolved = resolveEdgeStyle({ strokeWidth: 3 });
-  assert.equal(resolved.strokeColor, "#6b7280");
+  assert.equal(resolved.strokeColor, "#4ade80");
   assert.equal(resolved.strokeWidth, 3);
   assert.equal(resolved.strokeDasharray, "");
   assert.equal(resolved.animated, false);
@@ -85,14 +85,15 @@ test("clearNodeStyle and clearEdgeStyle drop overrides but keep the rest", () =>
   assert.equal(clearedEdge.source, "n1");
 });
 
-test("edgePresentation renders defaults as a solid grey curved line with an arrow", () => {
+test("edgePresentation renders defaults as a solid green curved line with an arrow", () => {
   assert.deepEqual(edgePresentation(edge), {
     type: "default",
-    style: { stroke: "#6b7280", strokeWidth: 1.5 },
+    style: { stroke: "#4ade80", strokeWidth: 1.5 },
     animated: false,
-    markerEnd: { type: "arrowclosed", color: "#6b7280" },
+    markerEnd: { type: "arrowclosed", color: "#4ade80" },
     labelShowBg: true,
-    labelBgStyle: { fill: "#ffffff" },
+    labelBgStyle: { fill: "#071a0e" },
+    labelStyle: { fill: "#4ade80" },
     labelBgPadding: [4, 2],
   });
 });
@@ -110,7 +111,8 @@ test("edgePresentation maps dash pattern and animation", () => {
     animated: true,
     markerEnd: { type: "arrowclosed", color: "#ff0000" },
     labelShowBg: true,
-    labelBgStyle: { fill: "#ffffff" },
+    labelBgStyle: { fill: "#071a0e" },
+    labelStyle: { fill: "#ff0000" },
     labelBgPadding: [4, 2],
   });
 });

@@ -153,7 +153,12 @@ The diagram editor is a **self-contained feature module** under `src/PicharaStud
 - **Tailwind CSS 3** with custom theme extending `colors`, `fontFamily`, and `boxShadow`.
 - Global styles in `src/index.css` using `@tailwind` directives plus hand-written CSS.
 - The Diagram Studio should use Tailwind utilities and may define scoped CSS for editor-specific layouts.
-- The editor's visual language is **independent** from the portfolio's dark-green theme — it should use a professional, neutral editor palette.
+- The editor follows the portfolio's Matrix theme (green-on-black, same
+  tokens as `src/index.css`) — a user-requested change (2026-11-20,
+  design fix run 3) that supersedes the earlier neutral-palette rule.
+  New shapes/edges default to dark fills with green borders and light
+  text (`PicharaStudio/constants/defaults.ts`); SVG/PNG exports use the
+  same dark background so they match the canvas.
 
 ### Testing
 

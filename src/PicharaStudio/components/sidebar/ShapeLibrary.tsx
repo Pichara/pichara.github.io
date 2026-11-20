@@ -33,8 +33,8 @@ function ShapePreview({ shape }: { shape: ShapeKind }) {
       {polygonPoints !== null ? (
         <polygon
           points={polygonPoints}
-          fill="#ffffff"
-          stroke="#4b5563"
+          fill="#071a0e"
+          stroke="#7cfbb0"
           strokeWidth={2}
           vectorEffect="non-scaling-stroke"
         />
@@ -44,8 +44,8 @@ function ShapePreview({ shape }: { shape: ShapeKind }) {
           cy="50"
           rx="48"
           ry="48"
-          fill="#ffffff"
-          stroke="#4b5563"
+          fill="#071a0e"
+          stroke="#7cfbb0"
           strokeWidth={2}
           vectorEffect="non-scaling-stroke"
         />
@@ -56,8 +56,8 @@ function ShapePreview({ shape }: { shape: ShapeKind }) {
           width="96"
           height="96"
           rx="8"
-          fill="#ffffff"
-          stroke="#4b5563"
+          fill="#071a0e"
+          stroke="#7cfbb0"
           strokeWidth={2}
           vectorEffect="non-scaling-stroke"
         />

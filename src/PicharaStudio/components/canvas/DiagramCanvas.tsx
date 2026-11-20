@@ -18,6 +18,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useDiagramStore } from "../../stores/diagramStore";
+import MatrixRainCorners from "./MatrixRainCorners";
 import SelectionToolbar from "./SelectionToolbar";
 import { customNodeTypes } from "../../nodes";
 import {
@@ -156,13 +157,18 @@ export default function DiagramCanvas() {
         // button, via the FitViewController below.
       >
         {showGrid ? (
-          <Background variant={BackgroundVariant.Dots} gap={GRID_SIZE} />
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={GRID_SIZE}
+            color="#1d5c33"
+          />
         ) : null}
         <FitViewController />
         <SelectionToolbar />
         <Controls />
         <MiniMap />
       </ReactFlow>
+      <MatrixRainCorners />
     </div>
   );
 }

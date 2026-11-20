@@ -37,7 +37,7 @@ test("edgePresentation maps line types to React Flow edge types", () => {
 test("edgePresentation adds an arrowhead by default, in the line color", () => {
   assert.deepEqual(edgePresentation(edge).markerEnd, {
     type: "arrowclosed",
-    color: "#6b7280",
+    color: "#4ade80",
   });
   const red = applyEdgeStyle(edge, { strokeColor: "#ff0000" });
   assert.deepEqual(edgePresentation(red).markerEnd, {
@@ -56,7 +56,7 @@ test("edgePresentation passes the data label through with a readable background"
   const presented = edgePresentation(labelledEdge);
   assert.equal(presented.label, "depends on");
   assert.equal(presented.labelShowBg, true);
-  assert.deepEqual(presented.labelBgStyle, { fill: "#ffffff" });
+  assert.deepEqual(presented.labelBgStyle, { fill: "#071a0e" });
   assert.deepEqual(presented.labelBgPadding, [4, 2]);
 });
 

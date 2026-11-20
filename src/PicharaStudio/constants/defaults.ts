@@ -38,13 +38,16 @@ export const ZOOM_STEP = 0.1;
 // Nodes
 // ---------------------------------------------------------------------------
 
-/** Default visual style for nodes without explicit styling. */
+/** Default visual style for nodes without explicit styling.
+ * Matrix theme (matches the portfolio): dark fill, green border, light
+ * text. Nodes never store a style unless the user changes one, so this
+ * re-themes every existing diagram too. */
 export const DEFAULT_NODE_STYLE: Required<NodeStyle> = {
-  backgroundColor: "#ffffff",
-  borderColor: "#d1d5db",
+  backgroundColor: "#071a0e",
+  borderColor: "#4bcc7b",
   borderWidth: 1,
   borderRadius: 8,
-  textColor: "#1f2937",
+  textColor: "#eafff0",
   fontSize: 14,
   fontWeight: "500",
   opacity: 1,
@@ -82,9 +85,10 @@ export const GROUP_PADDING = 24;
 // Edges
 // ---------------------------------------------------------------------------
 
-/** Default visual style for edges without explicit styling. */
+/** Default visual style for edges without explicit styling.
+ * Matrix theme: green stroke on the dark canvas. */
 export const DEFAULT_EDGE_STYLE: Required<EdgeStyle> = {
-  strokeColor: "#6b7280",
+  strokeColor: "#4ade80",
   strokeWidth: 1.5,
   strokeDasharray: "",
   animated: false,

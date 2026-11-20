@@ -118,6 +118,8 @@ export interface EdgePresentation {
   labelShowBg: boolean;
   /** Background fill for the label. */
   labelBgStyle: { fill: string };
+  /** Text color for the label (the edge stroke color, readable on the dark pill). */
+  labelStyle: { fill: string };
   /** Padding around the label text, in pixels. */
   labelBgPadding: [number, number];
 }
@@ -150,7 +152,8 @@ export function edgePresentation(edge: DiagramEdge): EdgePresentation {
       : {}),
     ...(label ? { label } : {}),
     labelShowBg: true,
-    labelBgStyle: { fill: "#ffffff" },
+    labelBgStyle: { fill: "#071a0e" },
+    labelStyle: { fill: style.strokeColor },
     labelBgPadding: [4, 2],
   };
 }
