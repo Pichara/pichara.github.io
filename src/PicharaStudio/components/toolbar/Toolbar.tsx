@@ -20,8 +20,10 @@ import {
 import { Link } from "react-router-dom";
 import { useDiagramStore } from "../../stores/diagramStore";
 import { useHistoryStore } from "../../stores/historyStore";
+import ConfirmDialog from "../dialogs/ConfirmDialog";
 import DiagramLibraryDialog from "../dialogs/DiagramLibraryDialog";
 import FileMenu from "./FileMenu";
+import type { Diagram } from "../../types";
 import {
   exportDiagramAsJson,
   exportDiagramAsPng,
@@ -129,17 +131,30 @@ export default function Toolbar({
   // autosave warning) instead of failing silently.
   const [fileError, setFileError] = useState<string | null>(null);
   const [showLibrary, setShowLibrary] = useState(false);
+  // Destructive file action waiting for the in-app confirm dialog
+  // (a native window.confirm is auto-dismissed by automated browsers,
+  // so the action would silently do nothing).
+  const [pendingConfirm, setPendingConfirm] = useState<
+    | { kind: "new" }
+    | { kind: "import"; diagram: Diagram }
+    | null
+  >(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleNewDiagram = useCallback(() => {
-    if (
-      window.confirm(
-        "Start a new diagram? The current diagram will be replaced."
-      )
-    ) {
+    setPendingConfirm({ kind: "new" });
+  }, []);
+
+  const handleConfirmPending = useCallback(() => {
+    if (pendingConfirm === null) return;
+    if (pendingConfirm.kind === "new") {
       newDiagram();
+    } else {
+      loadDiagram(pendingConfirm.diagram);
+      setFileError(null);
     }
-  }, [newDiagram]);
+    setPendingConfirm(null);
+  }, [pendingConfirm, newDiagram, loadDiagram]);
 
   const handleExportPng = useCallback(() => {
     setFileError(null);
@@ -170,11 +185,11 @@ export default function Toolbar({
         return;
       }
       if (
-        (diagram.nodes.length > 0 || diagram.edges.length > 0) &&
-        !window.confirm(
-          "Import this diagram? The current diagram will be replaced."
-        )
+        diagram.nodes.length > 0 ||
+        diagram.edges.length > 0
       ) {
+        // Ask first: importing replaces the canvas.
+        setPendingConfirm({ kind: "import", diagram: result.diagram });
         return;
       }
       loadDiagram(result.diagram);
@@ -295,6 +310,23 @@ export default function Toolbar({
       />
       {showLibrary ? (
         <DiagramLibraryDialog onClose={() => setShowLibrary(false)} />
+      ) : null}
+      {pendingConfirm !== null ? (
+        <ConfirmDialog
+          title={
+            pendingConfirm.kind === "new" ? "New diagram" : "Import diagram"
+          }
+          message={
+            pendingConfirm.kind === "new"
+              ? "Start a new diagram? The current diagram will be replaced."
+              : "Import this diagram? The current diagram will be replaced."
+          }
+          confirmLabel={
+            pendingConfirm.kind === "new" ? "New diagram" : "Import"
+          }
+          onConfirm={handleConfirmPending}
+          onCancel={() => setPendingConfirm(null)}
+        />
       ) : null}
     </header>
   );

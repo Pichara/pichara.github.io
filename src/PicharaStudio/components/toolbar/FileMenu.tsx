@@ -6,19 +6,27 @@
  * the three exports. The menu closes on Escape, on outside click, on
  * window resize, and after an item is picked.
  *
- * The dropdown is positioned `fixed` from the button's bounding rect
- * (instead of `absolute` inside the toolbar) so it is never clipped by
- * the toolbar's horizontal scroll on narrow screens.
+ * The dropdown is rendered in a portal to `document.body` and placed
+ * from the button's bounding rect (`utils/popover-placement.ts`): the
+ * toolbar's `backdrop-filter` makes it a containing block for
+ * `position: fixed` descendants, so an inline fixed menu is positioned
+ * against the toolbar instead of the viewport, and the old code assumed
+ * a 200px menu width, which clipped the item text when the menu measured
+ * wider. The placement now measures the real menu size and clamps it
+ * inside the viewport.
  */
 
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
+import { placePopover } from "../../utils/popover-placement";
 
 interface FileMenuProps {
   onNew: () => void;
@@ -58,45 +66,66 @@ export default function FileMenu({
   onExportPng,
 }: FileMenuProps) {
   const [open, setOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({
+    visibility: "hidden",
+  });
+  const menuRef = useRef<HTMLUListElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
+  // Position + measure the menu once it mounts (and on resize): its
+  // width is content-driven, so the placement must use the real size.
+  useLayoutEffect(() => {
     if (!open) return;
     const place = () => {
       const button = buttonRef.current;
-      if (button === null) return;
+      const menu = menuRef.current;
+      if (button === null || menu === null) return;
       const rect = button.getBoundingClientRect();
-      setMenuStyle({
-        top: rect.bottom + 6,
-        // Right-aligned with the button, clamped inside the viewport.
-        left: Math.max(8, rect.right - 200),
+      const size = menu.getBoundingClientRect();
+      const { top, left } = placePopover(rect, size, {
+        width: window.innerWidth,
+        height: window.innerHeight,
       });
+      setMenuStyle({ top, left, visibility: "visible" });
     };
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [open ]);
+
+  useEffect(() => {
+    if (!open) return;
     const close = () => setOpen(false);
     const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      // The button toggles on click: a mousedown on it must not close
+      // the menu first, or the click would reopen it right away.
       if (
         menuRef.current !== null &&
-        !menuRef.current.contains(event.target as Node)
+        !menuRef.current.contains(target) &&
+        buttonRef.current !== null &&
+        !buttonRef.current.contains(target)
       ) {
         setOpen(false);
       }
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        // Capture phase: the editor's own Esc handler clears the
+        // selection, and closing the menu must not do that too.
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen(false);
+      }
     };
-    place();
     document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("resize", place);
+    document.addEventListener("keydown", handleKeyDown, true);
     // A scroll (e.g. of the toolbar on a narrow screen) would leave
-    // the fixed menu behind, so close it instead of chasing the button.
+    // the menu behind, so close it instead of chasing the button.
     window.addEventListener("scroll", close, true);
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("resize", place);
+      document.removeEventListener("keydown", handleKeyDown, true);
       window.removeEventListener("scroll", close, true);
     };
   }, [open]);
@@ -110,7 +139,7 @@ export default function FileMenu({
   );
 
   return (
-    <div className="studio-toolbar__menu" ref={menuRef}>
+    <div className="studio-toolbar__menu">
       <button
         ref={buttonRef}
         type="button"
@@ -121,30 +150,38 @@ export default function FileMenu({
       >
         File
       </button>
-      {open ? (
-        <ul
-          className="studio-toolbar__menu-list"
-          role="menu"
-          aria-label="File"
-          style={menuStyle}
-        >
-          <FileMenuItem onClick={pick(onNew)}>New diagram</FileMenuItem>
-          <FileMenuItem onClick={pick(onOpenLibrary)}>
-            Diagrams…
-          </FileMenuItem>
-          <FileMenuItem onClick={pick(onImport)}>Import…</FileMenuItem>
-          <li
-            className="studio-toolbar__menu-separator"
-            role="separator"
-            aria-hidden="true"
-          />
-          <FileMenuItem onClick={pick(onExportJson)}>
-            Export JSON
-          </FileMenuItem>
-          <FileMenuItem onClick={pick(onExportSvg)}>Export SVG</FileMenuItem>
-          <FileMenuItem onClick={pick(onExportPng)}>Export PNG</FileMenuItem>
-        </ul>
-      ) : null}
+      {open
+        ? createPortal(
+            <ul
+              ref={menuRef}
+              className="studio-toolbar__menu-list"
+              role="menu"
+              aria-label="File"
+              style={menuStyle}
+            >
+              <FileMenuItem onClick={pick(onNew)}>New diagram</FileMenuItem>
+              <FileMenuItem onClick={pick(onOpenLibrary)}>
+                Diagrams…
+              </FileMenuItem>
+              <FileMenuItem onClick={pick(onImport)}>Import…</FileMenuItem>
+              <li
+                className="studio-toolbar__menu-separator"
+                role="separator"
+                aria-hidden="true"
+              />
+              <FileMenuItem onClick={pick(onExportJson)}>
+                Export JSON
+              </FileMenuItem>
+              <FileMenuItem onClick={pick(onExportSvg)}>
+                Export SVG
+              </FileMenuItem>
+              <FileMenuItem onClick={pick(onExportPng)}>
+                Export PNG
+              </FileMenuItem>
+            </ul>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

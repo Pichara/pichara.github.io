@@ -10,8 +10,9 @@
  * - Discrete content changes push the pre-change diagram: add node,
  *   connect edge, delete node/edge, drag start (one entry per drag).
  * - Selection and viewport changes are NOT recorded.
- * - `undo`/`redo` restore a snapshot directly through the diagram store
- *   without pushing, so they never pollute the stacks.
+ * - `undo`/`redo` restore only the snapshot's nodes/edges through
+ *   `restoreContentSnapshot`: the viewport (camera position/zoom) is
+ *   never part of an undo step, so undoing never jumps the camera.
  * - Loading a diagram or starting a new one clears both stacks.
  */
 
@@ -22,6 +23,7 @@ import {
   createHistoryStack,
   pushHistoryEntry,
   redoHistoryEntry,
+  restoreContentSnapshot,
   undoHistoryEntry,
   type HistoryStack,
 } from "../utils/history-stack";
@@ -50,14 +52,20 @@ export const useHistoryStore = create<HistoryStore>()((set, get) => ({
   undo: () => {
     const result = undoHistoryEntry(get(), useDiagramStore.getState().diagram);
     if (result === null) return;
-    useDiagramStore.setState({ diagram: result.snapshot });
+    // Content only: the snapshot's viewport stays in the past — the
+    // camera never jumps on undo.
+    useDiagramStore.setState((state) => ({
+      diagram: restoreContentSnapshot(state.diagram, result.snapshot),
+    }));
     set(result.stack);
   },
 
   redo: () => {
     const result = redoHistoryEntry(get(), useDiagramStore.getState().diagram);
     if (result === null) return;
-    useDiagramStore.setState({ diagram: result.snapshot });
+    useDiagramStore.setState((state) => ({
+      diagram: restoreContentSnapshot(state.diagram, result.snapshot),
+    }));
     set(result.stack);
   },
 

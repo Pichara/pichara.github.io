@@ -378,6 +378,109 @@
   box-shadow: 0 0 0 2px rgba(70, 190, 93, 0.25);
 }
 
+/* --- Color picker popover --- */
+
+/* In-DOM picker (presets + hex + custom color) opened from a format
+   swatch. Rendered in a portal to document.body and placed from the
+   swatch rect, so no ancestor filter or panel scroll can move or clip
+   it — the native color input's OS popup cannot be relied on for mouse
+   clicks. z-index sits above the File menu (40) and below dialog
+   backdrops (50). */
+.color-picker__popover {
+  position: fixed;
+  z-index: 45;
+  width: 216px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(3, 12, 7, 0.97);
+  border: 1px solid var(--matrix-line-strong);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 24px var(--matrix-glow);
+}
+
+.color-picker__presets {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+
+.color-picker__preset {
+  appearance: none;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid rgba(226, 255, 232, 0.25);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.color-picker__preset:hover,
+.color-picker__preset:focus-visible {
+  outline: none;
+  border-color: #80fba6;
+  box-shadow: 0 0 0 2px rgba(70, 190, 93, 0.25);
+}
+
+.color-picker__hex-row,
+.color-picker__custom-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-picker__row-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c0d9c7;
+  width: 48px;
+  flex: none;
+}
+
+.color-picker__hex-input {
+  border: 1px solid rgba(113, 191, 130, 0.27);
+  border-radius: 6px;
+  background: rgba(3, 11, 7, 0.9);
+  color: #ecfff0;
+  padding: 5px 8px;
+  font: 500 12px "IBM Plex Mono", monospace;
+  width: 100%;
+}
+
+.color-picker__hex-input:focus-visible {
+  outline: none;
+  border-color: #80fba6;
+  box-shadow: 0 0 0 2px rgba(70, 190, 93, 0.25);
+}
+
+.color-picker__custom-input {
+  appearance: none;
+  width: 36px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(113, 191, 130, 0.27);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.color-picker__custom-input::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.color-picker__custom-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+.color-picker__hint {
+  font-size: 11px;
+  color: var(--matrix-faint);
+  line-height: 1.4;
+  margin: 0;
+}
+
 .format-panel__check {
   display: flex;
   align-items: center;
@@ -633,6 +736,18 @@
   outline-offset: 2px;
 }
 
+/* Destructive action (e.g. Delete in a confirm dialog). */
+.studio-button--danger {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #fecaca;
+}
+
+.studio-button--danger:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.7);
+}
+
 /* --- Diagram library dialog --- */
 
 .diagram-library-dialog__backdrop {
@@ -750,6 +865,18 @@
   color: var(--matrix-faint);
   line-height: 1.5;
   margin: 0;
+}
+
+/* Confirm dialog: narrower than the library dialog, buttons right. */
+.confirm-dialog {
+  width: 420px;
+}
+
+.diagram-library-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 /* --- Shortcuts dialog --- */

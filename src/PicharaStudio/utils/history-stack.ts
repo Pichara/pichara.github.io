@@ -41,6 +41,19 @@ export function pushHistoryEntry<Snapshot>(
 }
 
 /**
+ * Restore only the content (nodes/edges) of a snapshot over the current
+ * state, keeping the current viewport (and name/metadata/id): moving the
+ * camera is not an undoable step, so undo/redo must never jump the zoom.
+ * Snapshots still carry the viewport they were taken with — it is simply
+ * never restored.
+ */
+export function restoreContentSnapshot<
+  Snapshot extends { nodes: unknown; edges: unknown },
+>(current: Snapshot, snapshot: Snapshot): Snapshot {
+  return { ...current, nodes: snapshot.nodes, edges: snapshot.edges };
+}
+
+/**
  * Step back one snapshot. Returns the snapshot to restore plus the updated
  * stack, or `null` when there is nothing to undo. The current state is
  * pushed onto the redo stack so `redo` can return to it.

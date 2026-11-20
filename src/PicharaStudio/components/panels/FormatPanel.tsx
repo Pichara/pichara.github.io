@@ -14,6 +14,7 @@
 import { useCallback, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useDiagramStore } from "../../stores/diagramStore";
+import ColorPicker from "./ColorPicker";
 import { DEFAULT_EDGE_STYLE, DEFAULT_NODE_STYLE } from "../../constants";
 import {
   asHexColor,
@@ -74,6 +75,12 @@ const DISTRIBUTE_BUTTONS: {
   },
 ];
 
+/**
+ * One color control: an in-DOM picker (presets, hex field, custom color)
+ * that applies on mouse click — the native color input's OS popup cannot
+ * be reached reliably by mouse clicks in some browsers. The `onBlur`
+ * ends the color-edit undo session when the picker closes.
+ */
 interface ColorFieldProps {
   label: string;
   value: string;
@@ -83,20 +90,12 @@ interface ColorFieldProps {
 
 function ColorField({ label, value, onChange, onBlur }: ColorFieldProps) {
   return (
-    <label className="format-panel__field">
-      <span className="format-panel__label">{label}</span>
-      <span className="format-panel__color-row">
-        <input
-          type="color"
-          className="format-panel__color-input"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onBlur={onBlur}
-          aria-label={label}
-        />
-        <code className="format-panel__color-value">{value}</code>
-      </span>
-    </label>
+    <ColorPicker
+      label={label}
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+    />
   );
 }
 

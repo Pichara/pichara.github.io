@@ -21,6 +21,7 @@ import {
   type ReactNode,
 } from "react";
 import { useDiagramStore } from "../../stores/diagramStore";
+import ConfirmDialog from "./ConfirmDialog";
 import { TEMPLATES } from "../../services/templates";
 import {
   deleteDiagramFromLibrary,
@@ -82,24 +83,38 @@ export default function DiagramLibraryDialog({
 
   const hasContent = diagram.nodes.length > 0 || diagram.edges.length > 0;
 
-  const confirmReplace = useCallback(() => {
-    if (!hasContent) return true;
-    return window.confirm(
-      "Replace the current diagram? Unsaved changes on the canvas will be lost."
-    );
-  }, [hasContent]);
+  // Destructive library action waiting for the in-app confirm dialog
+  // (a native window.confirm is auto-dismissed by automated browsers,
+  // so the action would silently do nothing).
+  const [pendingAction, setPendingAction] = useState<
+    | { kind: "template"; templateId: string }
+    | { kind: "open"; entry: SavedDiagramEntry }
+    | { kind: "delete"; entry: SavedDiagramEntry }
+    | null
+  >(null);
 
-  const handleUseTemplate = useCallback(
+  const runUseTemplate = useCallback(
     (templateId: string) => {
       const template = TEMPLATES.find(
         (candidate) => candidate.id === templateId
       );
       if (template === undefined) return;
-      if (!confirmReplace()) return;
       loadDiagram(template.build());
       onClose();
     },
-    [confirmReplace, loadDiagram, onClose]
+    [loadDiagram, onClose]
+  );
+
+  const handleUseTemplate = useCallback(
+    (templateId: string) => {
+      // Replacing the canvas asks first; an empty canvas loads directly.
+      if (hasContent) {
+        setPendingAction({ kind: "template", templateId });
+        return;
+      }
+      runUseTemplate(templateId);
+    },
+    [hasContent, runUseTemplate]
   );
 
   const handleSave = useCallback(() => {
@@ -118,13 +133,8 @@ export default function DiagramLibraryDialog({
     refreshEntries();
   }, [saveName, renameDiagram, refreshEntries]);
 
-  const handleOpen = useCallback(
+  const runOpen = useCallback(
     (entry: SavedDiagramEntry) => {
-      if (entry.id === diagram.id) {
-        onClose();
-        return;
-      }
-      if (!confirmReplace()) return;
       const saved = loadDiagramFromLibrary(entry.id);
       if (saved === null) {
         setMessage(`Could not open “${entry.name}” — the saved copy is missing or invalid.`);
@@ -134,18 +144,32 @@ export default function DiagramLibraryDialog({
       loadDiagram(saved);
       onClose();
     },
-    [confirmReplace, diagram.id, loadDiagram, onClose, refreshEntries]
+    [loadDiagram, onClose, refreshEntries]
   );
 
-  const handleDelete = useCallback(
+  const handleOpen = useCallback(
     (entry: SavedDiagramEntry) => {
-      if (
-        !window.confirm(
-          `Delete “${entry.name}” from your saved diagrams? This cannot be undone.`
-        )
-      ) {
+      if (entry.id === diagram.id) {
+        onClose();
         return;
       }
+      // Replacing the canvas asks first; an empty canvas opens directly.
+      if (hasContent) {
+        setPendingAction({ kind: "open", entry });
+        return;
+      }
+      runOpen(entry);
+    },
+    [diagram.id, hasContent, onClose, runOpen]
+  );
+
+  const handleDelete = useCallback((entry: SavedDiagramEntry) => {
+    // Deleting is destructive: always ask first.
+    setPendingAction({ kind: "delete", entry });
+  }, []);
+
+  const runDelete = useCallback(
+    (entry: SavedDiagramEntry) => {
       deleteDiagramFromLibrary(entry.id);
       if (entry.id === diagram.id) {
         // The canvas still shows the deleted diagram — start fresh so
@@ -156,6 +180,18 @@ export default function DiagramLibraryDialog({
     },
     [diagram.id, newDiagram, refreshEntries]
   );
+
+  const handleConfirmPending = useCallback(() => {
+    if (pendingAction === null) return;
+    if (pendingAction.kind === "template") {
+      runUseTemplate(pendingAction.templateId);
+    } else if (pendingAction.kind === "open") {
+      runOpen(pendingAction.entry);
+    } else {
+      runDelete(pendingAction.entry);
+    }
+    setPendingAction(null);
+  }, [pendingAction, runUseTemplate, runOpen, runDelete]);
 
   return (
     <div
@@ -278,6 +314,26 @@ export default function DiagramLibraryDialog({
           )}
         </section>
       </div>
+      {pendingAction !== null ? (
+        <ConfirmDialog
+          title={
+            pendingAction.kind === "delete"
+              ? `Delete “${pendingAction.entry.name}”?`
+              : "Replace diagram"
+          }
+          message={
+            pendingAction.kind === "delete"
+              ? "This cannot be undone."
+              : "Replace the current diagram? Unsaved changes on the canvas will be lost."
+          }
+          confirmLabel={
+            pendingAction.kind === "delete" ? "Delete" : "Replace"
+          }
+          danger={pendingAction.kind === "delete"}
+          onConfirm={handleConfirmPending}
+          onCancel={() => setPendingAction(null)}
+        />
+      ) : null}
     </div>
   );
 }

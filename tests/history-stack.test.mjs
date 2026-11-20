@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import {
   createHistoryStack,
   pushHistoryEntry,
-  undoHistoryEntry,
   redoHistoryEntry,
+  restoreContentSnapshot,
+  undoHistoryEntry,
 } from "../src/PicharaStudio/utils/history-stack.ts";
 
 test("push records a snapshot and clears the redo stack", () => {
@@ -67,4 +68,26 @@ test("a new push after undo discards the redo stack", () => {
   stack = pushHistoryEntry(undone.stack, "new", 3);
   assert.deepEqual(stack.future, []);
   assert.deepEqual(stack.past, ["new"]);
+});
+
+test("restoreContentSnapshot restores nodes/edges but keeps the current viewport", () => {
+  const current = {
+    nodes: ["new-node"],
+    edges: [],
+    viewport: { x: 10, y: 20, zoom: 2.46 },
+    name: "Current",
+  };
+  const snapshot = {
+    nodes: ["old-node"],
+    edges: ["old-edge"],
+    viewport: { x: 0, y: 0, zoom: 1 },
+    name: "Old",
+  };
+  const restored = restoreContentSnapshot(current, snapshot);
+  // Content comes from the snapshot; camera and identity stay current,
+  // so undo never jumps the zoom.
+  assert.deepEqual(restored.nodes, ["old-node"]);
+  assert.deepEqual(restored.edges, ["old-edge"]);
+  assert.deepEqual(restored.viewport, { x: 10, y: 20, zoom: 2.46 });
+  assert.equal(restored.name, "Current");
 });

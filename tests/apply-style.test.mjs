@@ -8,6 +8,7 @@ import {
   clearNodeStyle,
   edgePresentation,
   isHexColor,
+  normalizeHexInput,
   resolveEdgeStyle,
   resolveNodeStyle,
 } from "../src/PicharaStudio/utils/apply-style.ts";
@@ -124,4 +125,19 @@ test("asHexColor passes valid hex through and falls back otherwise", () => {
   assert.equal(asHexColor("#fff", "#ffffff"), "#ffffff");
   assert.equal(isHexColor("#123456"), true);
   assert.equal(isHexColor("#12345"), false);
+});
+
+test("normalizeHexInput accepts hex with or without #, and the 3-digit shorthand", () => {
+  assert.equal(normalizeHexInput("#06c80f"), "#06c80f");
+  assert.equal(normalizeHexInput("06C80F"), "#06c80f");
+  assert.equal(normalizeHexInput("  #f00  "), "#ff0000");
+  assert.equal(normalizeHexInput("#ABC"), "#aabbcc");
+});
+
+test("normalizeHexInput rejects anything that is not a hex color", () => {
+  assert.equal(normalizeHexInput("red"), null);
+  assert.equal(normalizeHexInput("#12345"), null);
+  assert.equal(normalizeHexInput("#1234567"), null);
+  assert.equal(normalizeHexInput(""), null);
+  assert.equal(normalizeHexInput("#gggggg"), null);
 });

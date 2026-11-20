@@ -180,3 +180,22 @@ export function asHexColor(
 ): string {
   return isHexColor(value) ? (value as string) : fallback;
 }
+
+/**
+ * Coerce user-typed hex text into a `#rrggbb` color, or `null` when it
+ * is not a color. Accepts an optional leading `#` and the 3-digit
+ * shorthand (`#f00` → `#ff0000`); anything else is rejected so a
+ * half-typed value never reaches the diagram.
+ */
+export function normalizeHexInput(value: string): string | null {
+  const text = value.trim().replace(/^#/, "");
+  if (/^[0-9a-fA-F]{6}$/.test(text)) return `#${text.toLowerCase()}`;
+  if (/^[0-9a-fA-F]{3}$/.test(text)) {
+    const expanded = text
+      .split("")
+      .map((digit) => `${digit}${digit}`)
+      .join("");
+    return `#${expanded.toLowerCase()}`;
+  }
+  return null;
+}
