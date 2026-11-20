@@ -16,6 +16,7 @@
 
 import { GROUP_NODE_TYPE, GROUP_PADDING } from "../constants/defaults.ts";
 import type { BaseNodeData, DiagramNode, NodePosition } from "../types";
+import { boundingBox } from "./geometry.ts";
 import { resolveNodeSize } from "./node-size.ts";
 
 /**
@@ -28,18 +29,12 @@ function nodesBounds(nodes: DiagramNode[]): {
   maxX: number;
   maxY: number;
 } {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const node of nodes) {
-    const { width, height } = resolveNodeSize(node.width, node.height);
-    minX = Math.min(minX, node.position.x);
-    minY = Math.min(minY, node.position.y);
-    maxX = Math.max(maxX, node.position.x + width);
-    maxY = Math.max(maxY, node.position.y + height);
-  }
-  return { minX, minY, maxX, maxY };
+  return boundingBox(
+    nodes.map((node) => {
+      const { width, height } = resolveNodeSize(node.width, node.height);
+      return { x: node.position.x, y: node.position.y, width, height };
+    })
+  );
 }
 
 /**

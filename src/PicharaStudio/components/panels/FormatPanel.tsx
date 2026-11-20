@@ -21,6 +21,10 @@ import {
   resolveNodeStyle,
 } from "../../utils/apply-style";
 import type { EdgeLineType, EdgeStyle, NodeStyle } from "../../types";
+import type {
+  AlignKind,
+  DistributeAxis,
+} from "../../utils/selection-ops";
 
 const BORDER_WIDTHS = [1, 2, 3, 4];
 const FONT_SIZES = [12, 14, 16, 18, 20];
@@ -40,6 +44,34 @@ const EDGE_LINE_TYPES: { value: EdgeLineType; label: string }[] = [
   { value: "curved", label: "Curved" },
   { value: "straight", label: "Straight" },
   { value: "orthogonal", label: "Orthogonal" },
+];
+
+/** Align buttons: one per alignment kind (label + tooltip). */
+const ALIGN_BUTTONS: { kind: AlignKind; label: string; title: string }[] = [
+  { kind: "left", label: "⇤ Left", title: "Align left edges" },
+  { kind: "center-x", label: "↔ Center", title: "Align horizontal centers" },
+  { kind: "right", label: "Right ⇥", title: "Align right edges" },
+  { kind: "top", label: "⇧ Top", title: "Align top edges" },
+  { kind: "center-y", label: "↕ Middle", title: "Align vertical centers" },
+  { kind: "bottom", label: "Bottom ⇩", title: "Align bottom edges" },
+];
+
+/** Distribute buttons: one per axis (label + tooltip). */
+const DISTRIBUTE_BUTTONS: {
+  axis: DistributeAxis;
+  label: string;
+  title: string;
+}[] = [
+  {
+    axis: "horizontal",
+    label: "Distribute ⇄",
+    title: "Space evenly left to right (needs 3+ shapes)",
+  },
+  {
+    axis: "vertical",
+    label: "Distribute ⇅",
+    title: "Space evenly top to bottom (needs 3+ shapes)",
+  },
 ];
 
 interface ColorFieldProps {
@@ -372,78 +404,35 @@ export default function FormatPanel({
             role="group"
             aria-label="Align"
           >
-            <button
-              type="button"
-              className="studio-button format-panel__arrange-button"
-              onClick={() => alignSelection("left")}
-              title="Align left edges"
-            >
-              ⇤ Left
-            </button>
-            <button
-              type="button"
-              className="studio-button format-panel__arrange-button"
-              onClick={() => alignSelection("center-x")}
-              title="Align horizontal centers"
-            >
-              ↔ Center
-            </button>
-            <button
-              type="button"
-              className="studio-button format-panel__arrange-button"
-              onClick={() => alignSelection("right")}
-              title="Align right edges"
-            >
-              Right ⇥
-            </button>
-            <button
-              type="button"
-              className="studio-button format-panel__arrange-button"
-              onClick={() => alignSelection("top")}
-              title="Align top edges"
-            >
-              ⇧ Top
-            </button>
-            <button
-              type="button"
-              className="studio-button format-panel__arrange-button"
-              onClick={() => alignSelection("center-y")}
-              title="Align vertical centers"
-            >
-              ↕ Middle
-            </button>
-            <button
-              type="button"
-              className="studio-button format-panel__arrange-button"
-              onClick={() => alignSelection("bottom")}
-              title="Align bottom edges"
-            >
-              Bottom ⇩
-            </button>
+            {ALIGN_BUTTONS.map((button) => (
+              <button
+                key={button.kind}
+                type="button"
+                className="studio-button format-panel__arrange-button"
+                onClick={() => alignSelection(button.kind)}
+                title={button.title}
+              >
+                {button.label}
+              </button>
+            ))}
           </div>
           <div
             className="format-panel__arrange-grid format-panel__arrange-grid--two"
             role="group"
             aria-label="Distribute"
           >
-            <button
-              type="button"
-              className="studio-button format-panel__arrange-button"
-              onClick={() => distributeSelection("horizontal")}
-              disabled={selectedNodes.length < 3}
-              title="Space evenly left to right (needs 3+ shapes)"
-            >
-              Distribute ⇄
-            </button>
-            <button
-              type="button"
-              className="studio-button format-panel__arrange-button"
-              onClick={() => distributeSelection("vertical")}
-              disabled={selectedNodes.length < 3}
-              title="Space evenly top to bottom (needs 3+ shapes)"
-            >
-              Distribute ⇅
-            </button>
+            {DISTRIBUTE_BUTTONS.map((button) => (
+              <button
+                key={button.axis}
+                type="button"
+                className="studio-button format-panel__arrange-button"
+                onClick={() => distributeSelection(button.axis)}
+                disabled={selectedNodes.length < 3}
+                title={button.title}
+              >
+                {button.label}
+              </button>
+            ))}
           </div>
         </section>
       ) : null}

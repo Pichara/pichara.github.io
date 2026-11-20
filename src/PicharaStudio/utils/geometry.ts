@@ -68,3 +68,32 @@ export function snapPosition(
     y: Math.round(position.y / gridSize) * gridSize,
   };
 }
+
+/** Bounding box of canvas rects, as min/max edges. */
+export interface Bounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+/**
+ * Bounding box covering every given rect (canvas coordinates).
+ * Callers must pass at least one rect; an empty list yields
+ * infinities, matching the manual loop this replaces.
+ */
+export function boundingBox(
+  rects: { x: number; y: number; width: number; height: number }[]
+): Bounds {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const rect of rects) {
+    minX = Math.min(minX, rect.x);
+    minY = Math.min(minY, rect.y);
+    maxX = Math.max(maxX, rect.x + rect.width);
+    maxY = Math.max(maxY, rect.y + rect.height);
+  }
+  return { minX, minY, maxX, maxY };
+}

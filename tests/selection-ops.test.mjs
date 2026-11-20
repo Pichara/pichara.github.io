@@ -4,6 +4,7 @@ import {
   alignNodes,
   cloneSelection,
   distributeNodes,
+  expandToDescendants,
   removeSelection,
   snapshotSelection,
 } from "../src/PicharaStudio/utils/selection-ops.ts";
@@ -281,4 +282,38 @@ test("removeSelection deletes a group together with its children", () => {
     ["c"]
   );
   assert.deepEqual(result.edges, []);
+});
+
+test("expandToDescendants adds children of a grouped node", () => {
+  const nodes = [
+    node("g", 0, 0, { selected: true, type: "group" }),
+    node("a", 10, 10, { parentId: "g" }),
+    node("b", 100, 0),
+  ];
+  assert.deepEqual(
+    [...expandToDescendants(nodes, new Set(["g"]))].sort(),
+    ["a", "g"]
+  );
+});
+
+test("expandToDescendants follows nested groups regardless of order", () => {
+  const nodes = [
+    node("child", 10, 10, { parentId: "inner" }),
+    node("inner", 0, 0, { parentId: "outer" }),
+    node("outer", 0, 0, { selected: true, type: "group" }),
+  ];
+  assert.deepEqual(
+    [...expandToDescendants(nodes, new Set(["outer"]))].sort(),
+    ["child", "inner", "outer"]
+  );
+});
+
+test("expandToDescendants does not mutate the input set", () => {
+  const nodes = [node("a", 0, 0, { parentId: "g" }), node("g", 0, 0)];
+  const input = new Set(["g"]);
+  assert.deepEqual(
+    [...expandToDescendants(nodes, input)].sort(),
+    ["a", "g"]
+  );
+  assert.deepEqual([...input], ["g"]);
 });

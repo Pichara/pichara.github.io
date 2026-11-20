@@ -14,7 +14,12 @@
  *   so autosave does not resurrect it.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { useDiagramStore } from "../../stores/diagramStore";
 import { TEMPLATES } from "../../services/templates";
 import {
@@ -28,6 +33,28 @@ import {
 interface DiagramLibraryDialogProps {
   /** Close the dialog. */
   onClose: () => void;
+}
+
+interface LibraryRowProps {
+  /** Row title (diagram/template name). */
+  name: ReactNode;
+  /** Secondary line (description or last-saved time). */
+  meta: string;
+  /** Action buttons on the right of the row. */
+  children: ReactNode;
+}
+
+/** One row of the templates / saved-diagrams lists (name + actions). */
+function LibraryRow({ name, meta, children }: LibraryRowProps) {
+  return (
+    <li className="diagram-library-dialog__row">
+      <span className="diagram-library-dialog__row-text">
+        <span className="diagram-library-dialog__row-name">{name}</span>
+        <span className="diagram-library-dialog__row-meta">{meta}</span>
+      </span>
+      {children}
+    </li>
+  );
 }
 
 export default function DiagramLibraryDialog({
@@ -159,18 +186,11 @@ export default function DiagramLibraryDialog({
           <h3 className="diagram-library-dialog__section-title">Templates</h3>
           <ul className="diagram-library-dialog__list">
             {TEMPLATES.map((template) => (
-              <li
+              <LibraryRow
                 key={template.id}
-                className="diagram-library-dialog__row"
+                name={template.name}
+                meta={template.description}
               >
-                <span className="diagram-library-dialog__row-text">
-                  <span className="diagram-library-dialog__row-name">
-                    {template.name}
-                  </span>
-                  <span className="diagram-library-dialog__row-meta">
-                    {template.description}
-                  </span>
-                </span>
                 <button
                   type="button"
                   className="studio-button"
@@ -178,7 +198,7 @@ export default function DiagramLibraryDialog({
                 >
                   Use template
                 </button>
-              </li>
+              </LibraryRow>
             ))}
           </ul>
         </section>
@@ -226,19 +246,16 @@ export default function DiagramLibraryDialog({
           ) : (
             <ul className="diagram-library-dialog__list">
               {entries.map((entry) => (
-                <li
+                <LibraryRow
                   key={entry.id}
-                  className="diagram-library-dialog__row"
-                >
-                  <span className="diagram-library-dialog__row-text">
-                    <span className="diagram-library-dialog__row-name">
+                  name={
+                    <>
                       {entry.name}
                       {entry.id === diagram.id ? " (open)" : ""}
-                    </span>
-                    <span className="diagram-library-dialog__row-meta">
-                      {new Date(entry.updatedAt).toLocaleString()}
-                    </span>
-                  </span>
+                    </>
+                  }
+                  meta={new Date(entry.updatedAt).toLocaleString()}
+                >
                   <span className="diagram-library-dialog__row-actions">
                     <button
                       type="button"
@@ -255,7 +272,7 @@ export default function DiagramLibraryDialog({
                       Delete
                     </button>
                   </span>
-                </li>
+                </LibraryRow>
               ))}
             </ul>
           )}

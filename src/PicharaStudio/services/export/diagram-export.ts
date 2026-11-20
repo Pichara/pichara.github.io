@@ -19,11 +19,14 @@
  * resolve them (see `utils/history-stack.ts` for the same convention).
  */
 
-import { DEFAULT_EDGE_STYLE } from "../../constants/defaults.ts";
-import { GROUP_NODE_TYPE } from "../../constants/defaults.ts";
+import {
+  DEFAULT_EDGE_STYLE,
+  GROUP_NODE_TYPE,
+} from "../../constants/defaults.ts";
 import { serializeDiagram } from "../persistence.ts";
 import { resolveEdgeStyle, resolveNodeStyle } from "../../utils/apply-style.ts";
 import { computeEdgePath, type NodeRect } from "../../utils/edge-path.ts";
+import { boundingBox } from "../../utils/geometry.ts";
 import { absoluteNodePosition } from "../../utils/grouping.ts";
 import { resolveNodeSize } from "../../utils/node-size.ts";
 import { shapePolygonPoints } from "../../utils/shape-geometry.ts";
@@ -31,6 +34,7 @@ import type {
   BaseNodeData,
   BaseShapeNodeData,
   Diagram,
+  DiagramEdge,
   DiagramNode,
 } from "../../types/index.ts";
 
@@ -62,25 +66,26 @@ export function diagramExportBounds(diagram: Diagram): ExportBounds {
     return { x: 0, y: 0, width: 400, height: 300 };
   }
   const byId = new Map(diagram.nodes.map((node) => [node.id, node]));
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const node of diagram.nodes) {
-    const { width, height } = resolveNodeSize(node.width, node.height);
-    // Children of a group store positions relative to the group.
-    const position = absoluteNodePosition(node, byId);
-    minX = Math.min(minX, position.x);
-    minY = Math.min(minY, position.y);
-    maxX = Math.max(maxX, position.x + width);
-    maxY = Math.max(maxY, position.y + height);
-  }
+  const { minX, minY, maxX, maxY } = boundingBox(
+    diagram.nodes.map((node) => nodeRect(node, byId))
+  );
   return {
     x: minX - EXPORT_PADDING,
     y: minY - EXPORT_PADDING,
     width: maxX - minX + EXPORT_PADDING * 2,
     height: maxY - minY + EXPORT_PADDING * 2,
   };
+}
+
+/** Canvas rect of a node, resolving fresh (0-sized) nodes to the defaults. */
+function nodeRect(
+  node: DiagramNode,
+  byId: Map<string, DiagramNode>
+): NodeRect {
+  const { width, height } = resolveNodeSize(node.width, node.height);
+  // Children of a group store positions relative to the group.
+  const position = absoluteNodePosition(node, byId);
+  return { x: position.x, y: position.y, width, height };
 }
 
 // ---------------------------------------------------------------------------
@@ -142,16 +147,6 @@ function labelTextSvg(
   return `<text x="${cx.toFixed(1)}" y="${cy.toFixed(1)}" text-anchor="${anchor}" dominant-baseline="central" font-family="sans-serif" font-size="${fontSize}" font-weight="${escapeXml(fontWeight)}" fill="${escapeXml(fill)}">${tspans}</text>`;
 }
 
-/** Canvas rect of a node, resolving fresh (0-sized) nodes to the defaults. */
-function nodeRect(
-  node: DiagramNode,
-  byId: Map<string, DiagramNode>
-): NodeRect {
-  const { width, height } = resolveNodeSize(node.width, node.height);
-  const position = absoluteNodePosition(node, byId);
-  return { x: position.x, y: position.y, width, height };
-}
-
 /** SVG markup for a group container: dashed outline with its label. */
 function groupNodeSvg(node: DiagramNode, rect: NodeRect): string {
   const label = labelTextSvg(
@@ -208,6 +203,78 @@ function nodeSvg(
 }
 
 /**
+ * Distinct stroke colors of the edges that draw an arrowhead: one
+ * `<marker>` definition per color is enough for the whole document.
+ */
+function arrowColorsOf(edges: DiagramEdge[]): string[] {
+  const colors: string[] = [];
+  for (const edge of edges) {
+    const style = resolveEdgeStyle(edge.data?.style);
+    if (style.arrow && !colors.includes(style.strokeColor)) {
+      colors.push(style.strokeColor);
+    }
+  }
+  return colors;
+}
+
+/** SVG `<marker>` definitions, one arrowhead per distinct edge color. */
+function arrowMarkersSvg(colors: string[]): string {
+  return colors
+    .map(
+      (color, index) =>
+        `<marker id="arrow-${index}" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${escapeXml(color)}" /></marker>`
+    )
+    .join("");
+}
+
+/**
+ * SVG markup for one edge (path + optional label). Returns "" for a
+ * dangling edge whose endpoint node was deleted — it has no geometry
+ * to draw.
+ */
+function edgeSvg(
+  edge: DiagramEdge,
+  byId: Map<string, DiagramNode>,
+  arrowColors: string[]
+): string {
+  const source = byId.get(edge.source);
+  const target = byId.get(edge.target);
+  if (source === undefined || target === undefined) return "";
+  const style = resolveEdgeStyle(edge.data?.style);
+  const path = computeEdgePath(
+    nodeRect(source, byId),
+    nodeRect(target, byId),
+    style.lineType
+  );
+  const marker =
+    style.arrow && arrowColors.includes(style.strokeColor)
+      ? ` marker-end="url(#arrow-${arrowColors.indexOf(style.strokeColor)})"`
+      : "";
+  const dash =
+    style.strokeDasharray !== "" && style.strokeDasharray !== undefined
+      ? ` stroke-dasharray="${escapeXml(style.strokeDasharray)}"`
+      : "";
+  const pathMarkup = `<path d="${path.d}" fill="none" stroke="${escapeXml(style.strokeColor)}" stroke-width="${style.strokeWidth}"${dash}${marker} opacity="${style.opacity}" />`;
+  const label = edge.data?.label?.trim();
+  if (label === undefined || label === "") return pathMarkup;
+  const lines = label.split("\n");
+  const fontSize = 12;
+  const longest = Math.max(...lines.map((line) => line.length));
+  const labelWidth = longest * fontSize * 0.55 + 10;
+  const labelHeight = lines.length * fontSize * 1.25 + 6;
+  const rectMarkup = `<rect x="${(path.labelX - labelWidth / 2).toFixed(1)}" y="${(path.labelY - labelHeight / 2).toFixed(1)}" width="${labelWidth.toFixed(1)}" height="${labelHeight.toFixed(1)}" rx="4" fill="#ffffff" />`;
+  const textMarkup = labelTextSvg(
+    label,
+    path.labelX,
+    path.labelY,
+    fontSize,
+    DEFAULT_EDGE_STYLE.strokeColor,
+    "500"
+  );
+  return `${pathMarkup}${rectMarkup}${textMarkup}`;
+}
+
+/**
  * Build a standalone SVG document for the diagram: white background,
  * edges (under the nodes, with arrowheads and labels), then nodes.
  * Coordinates are in canvas space; the viewBox is the padded bounds.
@@ -216,60 +283,10 @@ export function buildDiagramSvg(diagram: Diagram): string {
   const bounds = diagramExportBounds(diagram);
   const byId = new Map(diagram.nodes.map((node) => [node.id, node]));
 
-  // One arrowhead marker per distinct edge color that uses arrows.
-  const arrowColors: string[] = [];
-  for (const edge of diagram.edges) {
-    const style = resolveEdgeStyle(edge.data?.style);
-    if (style.arrow && !arrowColors.includes(style.strokeColor)) {
-      arrowColors.push(style.strokeColor);
-    }
-  }
-  const markers = arrowColors
-    .map(
-      (color, index) =>
-        `<marker id="arrow-${index}" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${escapeXml(color)}" /></marker>`
-    )
-    .join("");
-
+  const arrowColors = arrowColorsOf(diagram.edges);
+  const markers = arrowMarkersSvg(arrowColors);
   const edgeMarkup = diagram.edges
-    .map((edge) => {
-      const source = byId.get(edge.source);
-      const target = byId.get(edge.target);
-      // A dangling edge (endpoint node deleted) has no geometry to draw.
-      if (source === undefined || target === undefined) return "";
-      const style = resolveEdgeStyle(edge.data?.style);
-      const path = computeEdgePath(
-        nodeRect(source, byId),
-        nodeRect(target, byId),
-        style.lineType
-      );
-      const marker =
-        style.arrow && arrowColors.includes(style.strokeColor)
-          ? ` marker-end="url(#arrow-${arrowColors.indexOf(style.strokeColor)})"`
-          : "";
-      const dash =
-        style.strokeDasharray !== "" && style.strokeDasharray !== undefined
-          ? ` stroke-dasharray="${escapeXml(style.strokeDasharray)}"`
-          : "";
-      const pathMarkup = `<path d="${path.d}" fill="none" stroke="${escapeXml(style.strokeColor)}" stroke-width="${style.strokeWidth}"${dash}${marker} opacity="${style.opacity}" />`;
-      const label = edge.data?.label?.trim();
-      if (label === undefined || label === "") return pathMarkup;
-      const lines = label.split("\n");
-      const fontSize = 12;
-      const longest = Math.max(...lines.map((line) => line.length));
-      const labelWidth = longest * fontSize * 0.55 + 10;
-      const labelHeight = lines.length * fontSize * 1.25 + 6;
-      const rectMarkup = `<rect x="${(path.labelX - labelWidth / 2).toFixed(1)}" y="${(path.labelY - labelHeight / 2).toFixed(1)}" width="${labelWidth.toFixed(1)}" height="${labelHeight.toFixed(1)}" rx="4" fill="#ffffff" />`;
-      const textMarkup = labelTextSvg(
-        label,
-        path.labelX,
-        path.labelY,
-        fontSize,
-        DEFAULT_EDGE_STYLE.strokeColor,
-        "500"
-      );
-      return `${pathMarkup}${rectMarkup}${textMarkup}`;
-    })
+    .map((edge) => edgeSvg(edge, byId, arrowColors))
     .join("");
 
   // Group containers render under their members.

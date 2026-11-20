@@ -32,11 +32,12 @@ import type {
   ShapeKind,
   Viewport,
 } from "../types";
-import { DEFAULT_VIEWPORT, createDefaultMetadata } from "../constants";
 import {
   DEFAULT_GROUP_LABEL,
+  DEFAULT_VIEWPORT,
   GROUP_NODE_TYPE,
-} from "../constants/defaults";
+  createDefaultMetadata,
+} from "../constants";
 import { generateId } from "../utils/generate-id";
 import { groupNodes, ungroupNodes } from "../utils/grouping";
 import {
@@ -54,6 +55,7 @@ import {
   snapshotSelection,
   type AlignKind,
   type DistributeAxis,
+  type NodeMove,
   type SelectionSnapshot,
 } from "../utils/selection-ops";
 
@@ -92,6 +94,99 @@ export function createEmptyDiagram(): Diagram {
     viewport: DEFAULT_VIEWPORT,
     metadata: createDefaultMetadata(),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Pure diagram updates
+//
+// The actions below are thin wrappers around these helpers: each takes a
+// diagram and returns a new one, so the store never repeats the
+// `{ ...state.diagram, nodes/edges: ... }` spread inline.
+// ---------------------------------------------------------------------------
+
+/** Return a copy of `diagram` with `nodes` replaced. */
+function withNodes(diagram: Diagram, nodes: DiagramNode[]): Diagram {
+  return { ...diagram, nodes };
+}
+
+/** Return a copy of `diagram` with `edges` replaced. */
+function withEdges(diagram: Diagram, edges: DiagramEdge[]): Diagram {
+  return { ...diagram, edges };
+}
+
+/** Return a copy of `diagram` with `nodes` and `edges` replaced. */
+function withElements(
+  diagram: Diagram,
+  nodes: DiagramNode[],
+  edges: DiagramEdge[]
+): Diagram {
+  return { ...diagram, nodes, edges };
+}
+
+/** Return a copy of `diagram` with every node and edge deselected. */
+function deselectAll(diagram: Diagram): Diagram {
+  return {
+    ...diagram,
+    nodes: diagram.nodes.map((node) => ({ ...node, selected: false })),
+    edges: diagram.edges.map((edge) => ({ ...edge, selected: false })),
+  };
+}
+
+/**
+ * Return a copy of `diagram` with `nodes`/`edges` appended after
+ * deselecting everything already on the canvas: paste and duplicate
+ * both land fresh, selected clones beside deselected originals.
+ */
+function appendElements(
+  diagram: Diagram,
+  nodes: DiagramNode[],
+  edges: DiagramEdge[]
+): Diagram {
+  const cleared = deselectAll(diagram);
+  return {
+    ...cleared,
+    nodes: [...cleared.nodes, ...nodes],
+    edges: [...cleared.edges, ...edges],
+  };
+}
+
+/** Return a copy of `diagram` with every node and edge (de)selected. */
+function setAllSelected(diagram: Diagram, selected: boolean): Diagram {
+  return {
+    ...diagram,
+    nodes: diagram.nodes.map((node) => ({ ...node, selected })),
+    edges: diagram.edges.map((edge) => ({ ...edge, selected })),
+  };
+}
+
+/** Map `fn` over the selected elements of `items`, leaving the rest. */
+function mapSelected<T extends DiagramNode | DiagramEdge>(
+  items: T[],
+  fn: (item: T) => T
+): T[] {
+  return items.map((item) => (item.selected ? fn(item) : item));
+}
+
+/** Return a copy of `diagram` with the given node moves applied. */
+function applyMoves(diagram: Diagram, moves: NodeMove[]): Diagram {
+  const positions = new Map(moves.map((move) => [move.id, move.position]));
+  return withNodes(
+    diagram,
+    diagram.nodes.map((node) => {
+      const position = positions.get(node.id);
+      return position === undefined ? node : { ...node, position };
+    })
+  );
+}
+
+/**
+ * True when all given nodes live in one coordinate space (same parent):
+ * a child node's position is relative to its group, a top-level node's
+ * is absolute, so moving nodes across spaces would land them in the
+ * wrong place.
+ */
+function sameCoordinateSpace(nodes: DiagramNode[]): boolean {
+  return new Set(nodes.map((node) => node.parentId)).size <= 1;
 }
 
 interface DiagramStore {
@@ -310,7 +405,7 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     recordHistory(diagram);
     const { nodes, edges } = removeSelection(diagram.nodes, diagram.edges);
     set((state) => ({
-      diagram: { ...state.diagram, nodes, edges },
+      diagram: withElements(state.diagram, nodes, edges),
     }));
   },
 
@@ -322,19 +417,7 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     ) {
       return;
     }
-    set((state) => ({
-      diagram: {
-        ...state.diagram,
-        nodes: state.diagram.nodes.map((node) => ({
-          ...node,
-          selected: true,
-        })),
-        edges: state.diagram.edges.map((edge) => ({
-          ...edge,
-          selected: true,
-        })),
-      },
-    }));
+    set((state) => ({ diagram: setAllSelected(state.diagram, true) }));
   },
 
   clearSelection: () => {
@@ -345,19 +428,7 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     ) {
       return;
     }
-    set((state) => ({
-      diagram: {
-        ...state.diagram,
-        nodes: state.diagram.nodes.map((node) => ({
-          ...node,
-          selected: false,
-        })),
-        edges: state.diagram.edges.map((edge) => ({
-          ...edge,
-          selected: false,
-        })),
-      },
-    }));
+    set((state) => ({ diagram: setAllSelected(state.diagram, false) }));
   },
 
   copySelection: () => {
@@ -379,23 +450,7 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     );
     recordHistory(diagram);
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        nodes: [
-          ...state.diagram.nodes.map((node) => ({
-            ...node,
-            selected: false,
-          })),
-          ...clones.nodes,
-        ],
-        edges: [
-          ...state.diagram.edges.map((edge) => ({
-            ...edge,
-            selected: false,
-          })),
-          ...clones.edges,
-        ],
-      },
+      diagram: appendElements(state.diagram, clones.nodes, clones.edges),
       pasteCount: state.pasteCount + 1,
     }));
   },
@@ -407,23 +462,7 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     const clones = cloneSelection(snapshot, PASTE_OFFSET, () => generateId());
     recordHistory(diagram);
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        nodes: [
-          ...state.diagram.nodes.map((node) => ({
-            ...node,
-            selected: false,
-          })),
-          ...clones.nodes,
-        ],
-        edges: [
-          ...state.diagram.edges.map((edge) => ({
-            ...edge,
-            selected: false,
-          })),
-          ...clones.edges,
-        ],
-      },
+      diagram: appendElements(state.diagram, clones.nodes, clones.edges),
     }));
   },
 
@@ -436,9 +475,7 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     );
     if (grouped === null) return;
     recordHistory(diagram);
-    set((state) => ({
-      diagram: { ...state.diagram, nodes: grouped },
-    }));
+    set((state) => ({ diagram: withNodes(state.diagram, grouped) }));
   },
 
   ungroupSelection: () => {
@@ -449,53 +486,27 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     const ungrouped = ungroupNodes(diagram.nodes, groupIds);
     if (ungrouped === null) return;
     recordHistory(diagram);
-    set((state) => ({
-      diagram: { ...state.diagram, nodes: ungrouped },
-    }));
+    set((state) => ({ diagram: withNodes(state.diagram, ungrouped) }));
   },
 
   alignSelection: (kind) => {
     const { diagram } = get();
     const selected = diagram.nodes.filter((node) => node.selected);
-    // Align/distribute only make sense in one coordinate space: a child
-    // node's position is relative to its group, a top-level node's is
-    // absolute, so mixing them would move shapes to wrong places.
-    const parents = new Set(selected.map((node) => node.parentId));
-    if (parents.size > 1) return;
+    if (!sameCoordinateSpace(selected)) return;
     const moves = alignNodes(selected, kind);
     if (moves.length === 0) return;
-    const positions = new Map(moves.map((move) => [move.id, move.position]));
     recordHistory(diagram);
-    set((state) => ({
-      diagram: {
-        ...state.diagram,
-        nodes: state.diagram.nodes.map((node) => {
-          const position = positions.get(node.id);
-          return position === undefined ? node : { ...node, position };
-        }),
-      },
-    }));
+    set((state) => ({ diagram: applyMoves(state.diagram, moves) }));
   },
 
   distributeSelection: (axis) => {
     const { diagram } = get();
     const selected = diagram.nodes.filter((node) => node.selected);
-    // Same coordinate-space rule as alignSelection (see above).
-    const parents = new Set(selected.map((node) => node.parentId));
-    if (parents.size > 1) return;
+    if (!sameCoordinateSpace(selected)) return;
     const moves = distributeNodes(selected, axis);
     if (moves.length === 0) return;
-    const positions = new Map(moves.map((move) => [move.id, move.position]));
     recordHistory(diagram);
-    set((state) => ({
-      diagram: {
-        ...state.diagram,
-        nodes: state.diagram.nodes.map((node) => {
-          const position = positions.get(node.id);
-          return position === undefined ? node : { ...node, position };
-        }),
-      },
-    }));
+    set((state) => ({ diagram: applyMoves(state.diagram, moves) }));
   },
 
   addNode: (shape, position) => {
@@ -508,10 +519,7 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
         data: { label: `New ${shape}`, shape },
       };
       return {
-        diagram: {
-          ...state.diagram,
-          nodes: [...state.diagram.nodes, node],
-        },
+        diagram: withNodes(state.diagram, [...state.diagram.nodes, node]),
         spawnOffset: (state.spawnOffset + 40) % 200,
       };
     });
@@ -551,10 +559,10 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
         ? false
         : nodeResizeActive;
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        nodes: changes.applyTo(state.diagram.nodes),
-      },
+      diagram: withNodes(
+        state.diagram,
+        changes.applyTo(state.diagram.nodes)
+      ),
     }));
   },
 
@@ -564,23 +572,23 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
       recordHistory(get().diagram);
     }
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        edges: changes.applyTo(state.diagram.edges),
-      },
+      diagram: withEdges(
+        state.diagram,
+        changes.applyTo(state.diagram.edges)
+      ),
     }));
   },
 
   onConnect: (connection) => {
     recordHistory(get().diagram);
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        edges: addEdge(
+      diagram: withEdges(
+        state.diagram,
+        addEdge(
           { ...connection, id: generateId(), type: "default" },
           state.diagram.edges
-        ),
-      },
+        )
+      ),
     }));
   },
 
@@ -598,12 +606,12 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     if (!diagram.nodes.some((node) => node.selected)) return;
     if (record) recordHistory(diagram);
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        nodes: state.diagram.nodes.map((node) =>
-          node.selected ? applyNodeStyle(node, patch) : node
-        ),
-      },
+      diagram: withNodes(
+        state.diagram,
+        mapSelected(state.diagram.nodes, (node) =>
+          applyNodeStyle(node, patch)
+        )
+      ),
     }));
   },
 
@@ -612,12 +620,12 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     if (!diagram.edges.some((edge) => edge.selected)) return;
     if (record) recordHistory(diagram);
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        edges: state.diagram.edges.map((edge) =>
-          edge.selected ? applyEdgeStyle(edge, patch) : edge
-        ),
-      },
+      diagram: withEdges(
+        state.diagram,
+        mapSelected(state.diagram.edges, (edge) =>
+          applyEdgeStyle(edge, patch)
+        )
+      ),
     }));
   },
 
@@ -629,15 +637,13 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     if (!hasSelection) return;
     recordHistory(diagram);
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        nodes: state.diagram.nodes.map((node) =>
-          node.selected ? clearNodeStyle(node) : node
+      diagram: withEdges(
+        withNodes(
+          state.diagram,
+          mapSelected(state.diagram.nodes, clearNodeStyle)
         ),
-        edges: state.diagram.edges.map((edge) =>
-          edge.selected ? clearEdgeStyle(edge) : edge
-        ),
-      },
+        mapSelected(state.diagram.edges, clearEdgeStyle)
+      ),
     }));
   },
 
@@ -647,14 +653,14 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     if (!node || node.data.label === label) return;
     recordHistory(diagram);
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        nodes: state.diagram.nodes.map((candidate) =>
+      diagram: withNodes(
+        state.diagram,
+        state.diagram.nodes.map((candidate) =>
           candidate.id === nodeId
             ? { ...candidate, data: { ...candidate.data, label } }
             : candidate
-        ),
-      },
+        )
+      ),
     }));
   },
 
@@ -670,14 +676,14 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
     }
     recordHistory(diagram);
     set((state) => ({
-      diagram: {
-        ...state.diagram,
-        edges: state.diagram.edges.map((edge) =>
+      diagram: withEdges(
+        state.diagram,
+        state.diagram.edges.map((edge) =>
           edge.selected
             ? { ...edge, data: { ...edge.data, label: nextLabel } }
             : edge
-        ),
-      },
+        )
+      ),
     }));
   },
 

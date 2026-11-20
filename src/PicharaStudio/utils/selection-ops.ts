@@ -38,6 +38,34 @@ export interface NodeMove {
   position: NodePosition;
 }
 
+/**
+ * Grow `ids` with every descendant of its members: children of a
+ * selected/removed group join the set, so nested groups bring their
+ * whole subtree regardless of array order. Returns a new set; the
+ * input is not mutated.
+ */
+export function expandToDescendants(
+  nodes: DiagramNode[],
+  ids: Set<string>
+): Set<string> {
+  const grown = new Set(ids);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const node of nodes) {
+      if (
+        node.parentId !== undefined &&
+        grown.has(node.parentId) &&
+        !grown.has(node.id)
+      ) {
+        grown.add(node.id);
+        changed = true;
+      }
+    }
+  }
+  return grown;
+}
+
 /** Deep-copy a node's data payload (label, shape, nested style). */
 function cloneNodeData(node: DiagramNode): DiagramNode["data"] {
   return {
@@ -69,26 +97,12 @@ export function snapshotSelection(
   nodes: DiagramNode[],
   edges: DiagramEdge[]
 ): SelectionSnapshot {
-  const selectedIds = new Set(
-    nodes.filter((node) => node.selected).map((node) => node.id)
-  );
   // Children of a selected group are copied with it, even when they
-  // are not selected themselves; repeat until no new node joins, so
-  // nested groups bring their whole subtree regardless of array order.
-  let grew = true;
-  while (grew) {
-    grew = false;
-    for (const node of nodes) {
-      if (
-        node.parentId !== undefined &&
-        selectedIds.has(node.parentId) &&
-        !selectedIds.has(node.id)
-      ) {
-        selectedIds.add(node.id);
-        grew = true;
-      }
-    }
-  }
+  // are not selected themselves.
+  const selectedIds = expandToDescendants(
+    nodes,
+    new Set(nodes.filter((node) => node.selected).map((node) => node.id))
+  );
   const selectedNodes = nodes.filter((node) => selectedIds.has(node.id));
   return {
     nodes: selectedNodes.map((node) => ({
@@ -191,26 +205,11 @@ export function removeSelection(
   nodes: DiagramNode[],
   edges: DiagramEdge[]
 ): { nodes: DiagramNode[]; edges: DiagramEdge[] } {
-  const removedIds = new Set(
-    nodes.filter((node) => node.selected).map((node) => node.id)
+  // Children of a removed group go away with it.
+  const removedIds = expandToDescendants(
+    nodes,
+    new Set(nodes.filter((node) => node.selected).map((node) => node.id))
   );
-  // Children of a removed group go away with it; repeat until no new
-  // node joins, so nested groups take their whole subtree with them
-  // regardless of array order.
-  let grew = true;
-  while (grew) {
-    grew = false;
-    for (const node of nodes) {
-      if (
-        node.parentId !== undefined &&
-        removedIds.has(node.parentId) &&
-        !removedIds.has(node.id)
-      ) {
-        removedIds.add(node.id);
-        grew = true;
-      }
-    }
-  }
   return {
     nodes: nodes.filter((node) => !removedIds.has(node.id)),
     edges: edges.filter(

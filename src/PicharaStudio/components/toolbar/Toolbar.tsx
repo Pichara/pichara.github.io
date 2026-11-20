@@ -7,7 +7,13 @@
  * saved diagram).
  */
 
-import { useCallback, useRef, useState, type ChangeEvent } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 import { Link } from "react-router-dom";
 import { useDiagramStore } from "../../stores/diagramStore";
 import { useHistoryStore } from "../../stores/historyStore";
@@ -30,6 +36,66 @@ interface ToolbarProps {
   onToggleMobilePanel: (panel: MobilePanel) => void;
 }
 
+interface ToolbarGroupProps {
+  /** Accessible name for the button group. */
+  label: string;
+  /** Layout class (each group keeps its own toolbar class). */
+  className: string;
+  children: ReactNode;
+}
+
+/** A labelled group of toolbar buttons (one concern per group). */
+function ToolbarGroup({ label, className, children }: ToolbarGroupProps) {
+  return (
+    <div className={className} role="group" aria-label={label}>
+      {children}
+    </div>
+  );
+}
+
+interface ToolbarButtonProps {
+  onClick: () => void;
+  /** Tooltip (also the accessible name when `ariaLabel` is omitted). */
+  title?: string;
+  /** Accessible name for buttons whose text is not descriptive enough. */
+  ariaLabel?: string;
+  disabled?: boolean;
+  /** True when the button reflects an on state (Grid/Snap, panel toggles). */
+  pressed?: boolean;
+  /** True when the button opens a panel that is currently open. */
+  expanded?: boolean;
+  /** Extra class (e.g. the mobile panel-toggle class). */
+  className?: string;
+  children: ReactNode;
+}
+
+/** One toolbar button: same styling, optional toggle state. */
+function ToolbarButton({
+  onClick,
+  title,
+  ariaLabel,
+  disabled = false,
+  pressed,
+  expanded,
+  className = "studio-button",
+  children,
+}: ToolbarButtonProps) {
+  return (
+    <button
+      type="button"
+      className={className}
+      onClick={onClick}
+      disabled={disabled}
+      {...(title !== undefined ? { title } : {})}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(pressed !== undefined ? { "aria-pressed": pressed } : {})}
+      {...(expanded !== undefined ? { "aria-expanded": expanded } : {})}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function Toolbar({
   saveFailed,
   mobilePanel,
@@ -38,7 +104,6 @@ export default function Toolbar({
   const diagram = useDiagramStore((state) => state.diagram);
   const loadDiagram = useDiagramStore((state) => state.loadDiagram);
   const newDiagram = useDiagramStore((state) => state.newDiagram);
-  const diagramName = useDiagramStore((state) => state.diagram.name);
   const copySelection = useDiagramStore((state) => state.copySelection);
   const pasteClipboard = useDiagramStore((state) => state.pasteClipboard);
   const duplicateSelection = useDiagramStore(
@@ -142,7 +207,7 @@ export default function Toolbar({
         ← Portfolio
       </Link>
       <span className="studio-toolbar__title">Pichara Studio</span>
-      <span className="studio-toolbar__diagram-name">{diagramName}</span>
+      <span className="studio-toolbar__diagram-name">{diagram.name}</span>
       {saveFailed ? (
         <span className="studio-toolbar__save-warning" role="alert">
           Couldn&apos;t save locally
@@ -153,195 +218,144 @@ export default function Toolbar({
           {fileError}
         </span>
       ) : null}
-      <div
-        className="studio-toolbar__panels"
-        role="group"
-        aria-label="Side panels"
-      >
-        <button
-          type="button"
-          className="studio-button studio-toolbar__panel-toggle"
+      <ToolbarGroup label="Side panels" className="studio-toolbar__panels">
+        <ToolbarButton
           onClick={() => onToggleMobilePanel("shapes")}
-          aria-pressed={mobilePanel === "shapes"}
-          aria-expanded={mobilePanel === "shapes"}
           title="Open the shape library"
-          aria-label="Toggle shape library"
+          ariaLabel="Toggle shape library"
+          pressed={mobilePanel === "shapes"}
+          expanded={mobilePanel === "shapes"}
+          className="studio-button studio-toolbar__panel-toggle"
         >
           Shapes
-        </button>
-        <button
-          type="button"
-          className="studio-button studio-toolbar__panel-toggle"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => onToggleMobilePanel("format")}
-          aria-pressed={mobilePanel === "format"}
-          aria-expanded={mobilePanel === "format"}
           title="Open the format panel"
-          aria-label="Toggle format panel"
+          ariaLabel="Toggle format panel"
+          pressed={mobilePanel === "format"}
+          expanded={mobilePanel === "format"}
+          className="studio-button studio-toolbar__panel-toggle"
         >
           Format
-        </button>
-      </div>
-      <div
-        className="studio-toolbar__history"
-        role="group"
-        aria-label="Undo and redo"
-      >
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+      </ToolbarGroup>
+      <ToolbarGroup label="Undo and redo" className="studio-toolbar__history">
+        <ToolbarButton
           onClick={undo}
           disabled={!canUndo}
           title="Undo (Ctrl+Z)"
-          aria-label="Undo"
+          ariaLabel="Undo"
         >
           ↩ Undo
-        </button>
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={redo}
           disabled={!canRedo}
           title="Redo (Ctrl+Shift+Z)"
-          aria-label="Redo"
+          ariaLabel="Redo"
         >
           ↪ Redo
-        </button>
-      </div>
-      <div
-        className="studio-toolbar__view"
-        role="group"
-        aria-label="View"
-      >
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+      </ToolbarGroup>
+      <ToolbarGroup label="View" className="studio-toolbar__view">
+        <ToolbarButton
           onClick={requestFitView}
           disabled={!hasNodes}
           title="Zoom to fit the whole diagram (Ctrl+0)"
-          aria-label="Zoom to fit"
+          ariaLabel="Zoom to fit"
         >
           Zoom to fit
-        </button>
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={toggleGrid}
-          aria-pressed={showGrid}
           title="Show or hide the dotted grid"
-          aria-label="Toggle grid"
+          ariaLabel="Toggle grid"
+          pressed={showGrid}
         >
           Grid
-        </button>
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={toggleSnapToGrid}
-          aria-pressed={snapToGrid}
           title="Snap shapes to the grid when moving, dropping or adding them"
-          aria-label="Toggle snap to grid"
+          ariaLabel="Toggle snap to grid"
+          pressed={snapToGrid}
         >
           Snap
-        </button>
-      </div>
-      <div
+        </ToolbarButton>
+      </ToolbarGroup>
+      <ToolbarGroup
+        label="Copy, paste and duplicate"
         className="studio-toolbar__clipboard"
-        role="group"
-        aria-label="Copy, paste and duplicate"
       >
-        <button
-          type="button"
-          className="studio-button"
+        <ToolbarButton
           onClick={copySelection}
           disabled={!hasNodeSelection}
           title="Copy selection (Ctrl+C)"
-          aria-label="Copy selection"
+          ariaLabel="Copy selection"
         >
           Copy
-        </button>
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={pasteClipboard}
           disabled={!hasClipboard}
           title="Paste (Ctrl+V)"
-          aria-label="Paste"
+          ariaLabel="Paste"
         >
           Paste
-        </button>
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={duplicateSelection}
           disabled={!hasNodeSelection}
           title="Duplicate selection (Ctrl+D)"
-          aria-label="Duplicate selection"
+          ariaLabel="Duplicate selection"
         >
           Duplicate
-        </button>
-      </div>
-      <div
-        className="studio-toolbar__group"
-        role="group"
-        aria-label="Group and ungroup"
-      >
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+      </ToolbarGroup>
+      <ToolbarGroup label="Group and ungroup" className="studio-toolbar__group">
+        <ToolbarButton
           onClick={groupSelection}
           disabled={!canGroup}
           title="Group the selection so it moves together (Ctrl+G)"
-          aria-label="Group selection"
+          ariaLabel="Group selection"
         >
           Group
-        </button>
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={ungroupSelection}
           disabled={!canUngroup}
           title="Ungroup the selected group (Ctrl+Shift+G)"
-          aria-label="Ungroup selection"
+          ariaLabel="Ungroup selection"
         >
           Ungroup
-        </button>
-      </div>
-      <div
-        className="studio-toolbar__export"
-        role="group"
-        aria-label="Export and import"
-      >
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+      </ToolbarGroup>
+      <ToolbarGroup label="Export and import" className="studio-toolbar__export">
+        <ToolbarButton
           onClick={() => exportDiagramAsJson(diagram)}
           title="Download the diagram as a JSON file"
         >
           Export JSON
-        </button>
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => exportDiagramAsSvg(diagram)}
           title="Download the diagram as an SVG image"
         >
           Export SVG
-        </button>
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={handleExportPng}
           title="Download the diagram as a PNG image"
         >
           Export PNG
-        </button>
-        <button
-          type="button"
-          className="studio-button"
+        </ToolbarButton>
+        <ToolbarButton
           onClick={handleImportClick}
           title="Open a diagram from a JSON file"
         >
           Import
-        </button>
+        </ToolbarButton>
         <input
           ref={fileInputRef}
           type="file"
@@ -350,22 +364,16 @@ export default function Toolbar({
           onChange={handleImportFile}
           aria-label="Choose a diagram JSON file to import"
         />
-      </div>
-      <button
-        type="button"
-        className="studio-button"
+      </ToolbarGroup>
+      <ToolbarButton
         onClick={() => setShowLibrary(true)}
         title="Open templates and your saved diagrams"
       >
         Diagrams
-      </button>
-      <button
-        type="button"
-        className="studio-button"
-        onClick={handleNewDiagram}
-      >
+      </ToolbarButton>
+      <ToolbarButton onClick={handleNewDiagram}>
         New
-      </button>
+      </ToolbarButton>
       {showLibrary ? (
         <DiagramLibraryDialog onClose={() => setShowLibrary(false)} />
       ) : null}
