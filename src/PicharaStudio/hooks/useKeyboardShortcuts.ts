@@ -14,11 +14,16 @@
  * Without a modifier:
  * - Delete / Backspace: delete the selection (one undo step)
  * - Escape: clear the selection
+ * - ?: open the keyboard shortcuts dialog
  *
  * Shortcuts are ignored while typing in an editable element (input,
  * textarea, select, contenteditable) so text editing keeps its native
  * behavior, and when Alt is held (to avoid clashing with OS-level
  * shortcuts). Holding Ctrl+Z repeats undo, matching standard editors.
+ *
+ * The "?" shortcut needs a callback because the dialog lives in
+ * `components/DiagramStudio.tsx`, above this hook's owner: pass
+ * `onOpenShortcuts` to open it.
  */
 
 import { useEffect } from "react";
@@ -32,7 +37,9 @@ function isEditableTarget(target: EventTarget | null): boolean {
   return ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
 }
 
-export function useKeyboardShortcuts(): void {
+export function useKeyboardShortcuts(
+  onOpenShortcuts?: () => void
+): void {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.altKey || isEditableTarget(event.target)) return;
@@ -81,10 +88,13 @@ export function useKeyboardShortcuts(): void {
         store.deleteSelection();
       } else if (key === "escape") {
         store.clearSelection();
+      } else if (key === "?") {
+        event.preventDefault();
+        onOpenShortcuts?.();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [onOpenShortcuts]);
 }

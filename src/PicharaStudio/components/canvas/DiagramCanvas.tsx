@@ -14,6 +14,7 @@ import {
   MiniMap,
   ReactFlow,
   useReactFlow,
+  useReactFlowStoreApi,
   type Viewport as ReactFlowViewport,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -28,33 +29,64 @@ import {
   SHAPE_DRAG_MIME_TYPE,
 } from "../../constants";
 import { edgePresentation } from "../../utils/apply-style";
+import {
+  diagramBounds,
+  shouldFitView,
+  viewportForBounds,
+} from "../../utils/fit-view";
 import { computeDropPosition, snapPosition } from "../../utils/geometry";
 import type { ShapeKind } from "../../types";
 
 /**
  * Watches the store's fit-view requests and pans/zooms the camera so
  * the whole diagram is visible. Lives inside the React Flow tree because
- * only there is `useReactFlow` available. The toolbar button and the
- * Ctrl+0 shortcut only bump `fitViewRequest` in the store.
+ * only there are `useReactFlow` and the store API available. The toolbar
+ * button and the Ctrl+0 shortcut only bump `fitViewRequest` in the store.
+ *
+ * The fit is computed here, not with React Flow's `fitView`: that call
+ * (a) only frames nodes with measured dimensions, so a freshly added
+ * shape still measuring 0x0 is left out of the frame, and (b) animates
+ * through a d3 transition that fights the controlled viewport, so the
+ * camera can stall part-way (observed: 275% -> 248% with a node still
+ * cut off at the bottom). The bounds come from the store's nodes at
+ * their rendered size (`utils/fit-view.ts`) and the viewport is applied
+ * instantly with `setViewport` — the same path wheel zoom and panning
+ * use, so there is no animation to interrupt.
+ *
+ * The effect depends only on the request counter: it must NOT re-run
+ * when nodes are added — that was the old bug, where every added shape
+ * re-fit the camera and the zoom jumped (up to 373% for one node).
  */
 function FitViewController() {
   const fitViewRequest = useDiagramStore((state) => state.fitViewRequest);
-  const nodeCount = useDiagramStore((state) => state.diagram.nodes.length);
-  const { fitView } = useReactFlow();
+  const { setViewport } = useReactFlow();
+  const storeApi = useReactFlowStoreApi();
   const firstRun = useRef(true);
 
   useEffect(() => {
-    // The store starts at 0 — that is not a user request.
-    if (firstRun.current) {
+    // The store starts at 0 — that is not a user request — and a
+    // restored diagram keeps its saved viewport on load.
+    const nodeCount = useDiagramStore.getState().diagram.nodes.length;
+    if (!shouldFitView(firstRun.current, nodeCount)) {
       firstRun.current = false;
       return;
     }
-    if (nodeCount === 0) return;
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    fitView({ padding: 0.2, duration: reduceMotion ? 0 : 200 });
-  }, [fitViewRequest, fitView, nodeCount]);
+    firstRun.current = false;
+    const bounds = diagramBounds(useDiagramStore.getState().diagram.nodes);
+    if (bounds === null) return;
+    // Pane size comes from React Flow's viewport store (read here, not
+    // subscribed: a window resize must not re-fit the camera on its own).
+    const { width, height } = storeApi.viewportStore.getState();
+    const viewport = viewportForBounds(
+      bounds,
+      width,
+      height,
+      MIN_ZOOM,
+      MAX_ZOOM
+    );
+    if (viewport === null) return;
+    setViewport(viewport);
+  }, [fitViewRequest, setViewport, storeApi]);
 
   return null;
 }
@@ -153,8 +185,8 @@ export default function DiagramCanvas() {
         // canvas would re-center and zoom the camera (up to 400% for a
         // single node). The viewport is controlled and persisted instead,
         // so adding a shape never moves the camera. Zoom to fit is
-        // on-demand: the toolbar button, Ctrl+0, or the Controls fit
-        // button, via the FitViewController below.
+        // on-demand: the toolbar button or Ctrl+0, via the
+        // FitViewController below.
       >
         {showGrid ? (
           <Background
@@ -165,10 +197,26 @@ export default function DiagramCanvas() {
         ) : null}
         <FitViewController />
         <SelectionToolbar />
-        <Controls />
+        {/* No fit button here: the Controls fit calls React Flow's
+            animated fitView, which frames unmeasured nodes wrong and
+            stalls against the controlled viewport — the same bugs the
+            FitViewController above fixes. Zoom to fit lives in the
+            toolbar and on Ctrl+0. */}
+        <Controls showFitView={false} />
         <MiniMap />
       </ReactFlow>
       <MatrixRainCorners />
+      {nodes.length === 0 ? (
+        <div className="studio-empty-state" aria-hidden="true">
+          <p className="studio-empty-state__title">Start your diagram</p>
+          <p className="studio-empty-state__hint">
+            Drag a shape from the library — or click one to add it here.
+          </p>
+          <p className="studio-empty-state__hint">
+            Double-click a shape to rename it · Press ? for shortcuts
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }

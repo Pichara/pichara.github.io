@@ -159,6 +159,36 @@
   stroke: var(--matrix-accent);
 }
 
+/* --- Empty-state guidance --- */
+
+/* Shown on an empty diagram only. pointer-events none so it never
+   blocks marquee selection, panning, or drops on the canvas. */
+.studio-empty-state {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  pointer-events: none;
+  text-align: center;
+  max-width: min(420px, 86%);
+}
+
+.studio-empty-state__title {
+  font: 700 18px/1.3 "Space Grotesk", sans-serif;
+  color: #f5fff6;
+  margin: 0 0 8px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+
+.studio-empty-state__hint {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--matrix-muted);
+  margin: 0 0 4px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+}
+
 /* --- Shape library sidebar --- */
 
 .shape-library {
@@ -722,6 +752,43 @@
   margin: 0;
 }
 
+/* --- Shortcuts dialog --- */
+
+.shortcuts-dialog {
+  width: 440px;
+}
+
+.shortcuts-dialog__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shortcuts-dialog__row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.shortcuts-dialog__keys {
+  flex: none;
+  min-width: 170px;
+  font: 600 12px "IBM Plex Mono", monospace;
+  color: var(--matrix-accent);
+  background: rgba(124, 251, 176, 0.08);
+  border: 1px solid var(--matrix-line);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.shortcuts-dialog__action {
+  color: var(--matrix-text-soft);
+}
+
 /* --- Status bar --- */
 
 .studio-status-bar {
@@ -773,6 +840,8 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  /* A shape is draggable: the grab cursor says so before the first click. */
+  cursor: grab;
 }
 
 .shape-node__bg {
@@ -855,6 +924,40 @@
   border-color: var(--matrix-accent);
   box-shadow: 0 0 0 2px rgba(124, 251, 176, 0.35),
     0 0 16px rgba(124, 251, 176, 0.15);
+}
+
+/* Selected polygons highlight their own outline (the rectangular halo
+   above does not apply to the SVG layer). */
+.shape-node.is-selected .shape-node__bg--svg polygon {
+  stroke: var(--matrix-accent);
+  filter: drop-shadow(0 0 8px rgba(124, 251, 176, 0.35));
+}
+
+/* --- Node hover / drag affordances --- */
+
+/* Hovering brightens the border so the hovered shape is obvious. */
+.shape-node:active {
+  cursor: grabbing;
+}
+
+.shape-node:hover .shape-node__bg:not(.shape-node__bg--svg) {
+  border-color: var(--matrix-accent);
+}
+
+.shape-node:hover .shape-node__bg--svg polygon {
+  stroke: var(--matrix-accent);
+}
+
+/* While dragging, the shape lifts off the canvas slightly. */
+.studio-canvas .react-flow__node.dragging .shape-node {
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
+}
+
+/* Connection handles grow on hover, so it is clear they can be dragged
+   to connect two shapes. */
+.studio-canvas .react-flow__node:hover .react-flow__handle {
+  width: 12px;
+  height: 12px;
 }
 
 /* --- Mobile layout (narrow screens) --- */

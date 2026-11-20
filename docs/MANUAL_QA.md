@@ -24,4 +24,8 @@ This checklist is **not** satisfied by CI. Review before merging.
 - [ ] Undo past the first action does nothing; a new action after undo clears redo.
 - [ ] Reload the page — the undone state is what autosave persisted.
 - [ ] Zoom to fit (toolbar button or Ctrl+0) frames all shapes; Grid/Snap toggles hide the dots and stop snapping; Delete removes the selection (with its edges) in one undo step, Ctrl+A selects all, Esc clears the selection.
+- [ ] Add several shapes one after another — the camera never moves and the zoom never jumps. Then Zoom to fit (toolbar or Ctrl+0) frames every shape, including the last one added, with margin on all sides.
+- [ ] Empty diagram shows the "Start your diagram" hint on the canvas; it disappears as soon as a shape is added and never blocks dragging or clicking.
+- [ ] Press "?" (or the toolbar "?" button) — the shortcuts dialog lists every shortcut; Esc closes it without clearing the selection.
+- [ ] Hover a shape — its border brightens and the connection handles grow; drag it — the cursor grabs. Select a polygon — its own outline highlights, not just the resize handles.
 - [ ] Drag on empty canvas draws a marquee that selects the shapes inside it; pan with Space+drag or middle/right mouse. Select 2+ shapes and Group (toolbar or Ctrl+G) — a dashed container appears and dragging it moves the members together; Ungroup (Ctrl+Shift+G) dissolves it with the shapes in place. Deleting a group deletes its members; copy/paste of a group keeps the members inside.

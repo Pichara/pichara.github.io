@@ -32,3 +32,6 @@ export type {
   ShapeLibraryCategory,
   ShapeLibraryEntry,
 } from "./shapes.ts";
+
+export { MOUSE_TIPS, SHORTCUTS } from "./shortcuts.ts";
+export type { ShortcutEntry } from "./shortcuts.ts";

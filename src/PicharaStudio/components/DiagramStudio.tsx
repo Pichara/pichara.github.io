@@ -11,12 +11,13 @@
  * width. See DiagramStudio.css for the breakpoint rules.
  */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Toolbar from "./toolbar/Toolbar";
 import ShapeLibrary from "./sidebar/ShapeLibrary";
 import DiagramCanvas from "./canvas/DiagramCanvas";
 import FormatPanel from "./panels/FormatPanel";
 import StatusBar from "./status-bar/StatusBar";
+import ShortcutsDialog from "./dialogs/ShortcutsDialog";
 import { useDiagramPersistence } from "../hooks/useDiagramPersistence";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import {
@@ -27,7 +28,12 @@ import "./DiagramStudio.css";
 
 export default function DiagramStudio() {
   const { saveFailed } = useDiagramPersistence();
-  useKeyboardShortcuts();
+  // Shortcuts dialog state lives here so both the "?" key (handled by
+  // the hook) and the toolbar "?" button can open it. Stable callback
+  // so the hook does not re-register its listener on every render.
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const openShortcuts = useCallback(() => setShortcutsOpen(true), []);
+  useKeyboardShortcuts(openShortcuts);
 
   // Which side panel is open as an overlay drawer on narrow screens.
   // Ignored on desktop, where both panels are always visible.
@@ -41,6 +47,7 @@ export default function DiagramStudio() {
         onToggleMobilePanel={(panel) =>
           setMobilePanel((current) => toggleMobilePanel(current, panel))
         }
+        onShowShortcuts={openShortcuts}
       />
       <main className="studio-main">
         <ShapeLibrary
@@ -56,6 +63,9 @@ export default function DiagramStudio() {
         />
       </main>
       <StatusBar />
+      {shortcutsOpen ? (
+        <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />
+      ) : null}
     </div>
   );
 }

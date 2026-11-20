@@ -37,6 +37,8 @@ interface ToolbarProps {
   mobilePanel: MobilePanel | null;
   /** Toggles a side panel drawer (narrow screens only; no-op visually on desktop). */
   onToggleMobilePanel: (panel: MobilePanel) => void;
+  /** Opens the keyboard shortcuts dialog (also on the "?" key). */
+  onShowShortcuts: () => void;
 }
 
 interface ToolbarGroupProps {
@@ -103,6 +105,7 @@ export default function Toolbar({
   saveFailed,
   mobilePanel,
   onToggleMobilePanel,
+  onShowShortcuts,
 }: ToolbarProps) {
   const diagram = useDiagramStore((state) => state.diagram);
   const loadDiagram = useDiagramStore((state) => state.loadDiagram);
@@ -274,6 +277,14 @@ export default function Toolbar({
         onExportSvg={() => exportDiagramAsSvg(diagram)}
         onExportPng={handleExportPng}
       />
+      <span className="studio-toolbar__divider" aria-hidden="true" />
+      <ToolbarButton
+        onClick={onShowShortcuts}
+        title="Keyboard shortcuts (?)"
+        ariaLabel="Show keyboard shortcuts"
+      >
+        ?
+      </ToolbarButton>
       <input
         ref={fileInputRef}
         type="file"
