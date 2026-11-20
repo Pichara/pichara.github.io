@@ -552,6 +552,14 @@
 .shape-node__bg {
   position: absolute;
   inset: 0;
+}
+
+/* The rectangular background and border belong to the CSS-drawn shapes
+   (rectangle, ellipse) only. Polygon shapes draw their own outline in
+   the SVG — a background/border on the SVG would paint a white
+   rectangle behind the polygon and show its edges as diagonals inside
+   it. */
+.shape-node__bg:not(.shape-node__bg--svg) {
   background: #ffffff;
   border: 1px solid #d1d5db;
 }
@@ -613,7 +621,10 @@
   overflow-wrap: anywhere;
 }
 
-.shape-node.is-selected .shape-node__bg {
+/* The selection outline follows the rectangular background only; on a
+   polygon it would draw a blue rectangle (and halo) around the shape
+   instead of its outline. Polygons show the NodeResizer handles. */
+.shape-node.is-selected .shape-node__bg:not(.shape-node__bg--svg) {
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
 }
