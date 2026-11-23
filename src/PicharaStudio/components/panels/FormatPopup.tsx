@@ -17,9 +17,11 @@
  * One row, no title, with a ✕ close button at the end of the row:
  * ColorPicker popover still opens from each swatch), compact selects
  * for widths / sizes / weights, and a ↺ reset icon. Shapes get fill,
- * border, border width, text color, font size and font weight;
- * connections get line color, line width, line style, line type, a
- * label field and an arrowhead toggle. With a mixed selection both
+ * border width, text color, font size and font weight — there is no
+ * border-color control (removed 2026-11-23 at the owner's request):
+ * shapes keep their border color from the data model (Matrix-theme
+ * default); connections get line color, line width, line style, line
+ * type, a label field and an arrowhead toggle. With a mixed selection both
  * groups sit side by side in the same row, separated by a divider.
  * Align / distribute and the animated-flow toggle used to live here;
  * they were dropped with the vertical layout — there is no other UI
@@ -429,15 +431,6 @@ export default function FormatPopup({
               DEFAULT_NODE_STYLE.backgroundColor
             )}
             onChange={(value) => applyNodeColor({ backgroundColor: value })}
-            onBlur={endColorEdit}
-          />
-          <ColorField
-            label="Border"
-            value={asHexColor(
-              nodeStyle.borderColor,
-              DEFAULT_NODE_STYLE.borderColor
-            )}
-            onChange={(value) => applyNodeColor({ borderColor: value })}
             onBlur={endColorEdit}
           />
           <SelectField

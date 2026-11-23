@@ -139,10 +139,9 @@ test("the strip still renders as control groups, not sections", () => {
   );
 });
 
-test("essential formatting survives: fill, border, text, sizes", () => {
+test("essential formatting survives: fill, border width, text, sizes", () => {
   for (const label of [
     "Fill",
-    "Border",
     "Border width",
     "Text",
     "Font size",
@@ -158,6 +157,13 @@ test("essential formatting survives: fill, border, text, sizes", () => {
       `the strip still offers ${label}`
     );
   }
+  // The border-color control was removed 2026-11-23 at the owner's
+  // request: shapes keep their border color from the data model
+  // (Matrix-theme default); only the border width stays editable.
+  assert.ok(
+    !code.includes('label="Border"'),
+    "no border-color control in the strip"
+  );
   assert.ok(
     code.includes('aria-label="Reset style"'),
     "reset survives as an icon button"

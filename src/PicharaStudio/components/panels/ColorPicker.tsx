@@ -49,7 +49,7 @@ export const COLOR_PRESETS = [
 ];
 
 interface ColorPickerProps {
-  /** Field label (Fill, Border, Text, Line). */
+  /** Field label (Fill, Text, Line). */
   label: string;
   /** Current color as `#rrggbb`. */
   value: string;

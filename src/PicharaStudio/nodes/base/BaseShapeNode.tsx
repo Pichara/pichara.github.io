@@ -18,6 +18,11 @@
  * Connection handles come from `shapeHandles` in `utils/shape-geometry.ts`
  * — every attach point carries both a target and a source handle, so
  * edges can start from or land on any of them.
+ * The label renders inside the shape's safe text box (`shapeTextBox`
+ * in `utils/shape-text-box.ts`) — the centered rectangle that lies
+ * inside the shape's outline — and shrinks to fit when the wrapped
+ * text is taller or wider than that box, so it never shows outside
+ * the outline on any of the seven shapes.
  * Resizing writes explicit width/height on the node, so the component
  * renders those when present and falls back to the defaults otherwise.
  * The fallback also covers the fresh-node case: React Flow v13 passes
@@ -25,7 +30,15 @@
  * 0x0 — see `utils/node-size.ts`.
  */
 
-import { memo, useState, type CSSProperties, type KeyboardEvent } from "react";
+import {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+} from "react";
 import {
   Handle,
   NodeResizeControl,
@@ -48,6 +61,10 @@ import {
   type ResizeCorner,
   type ShapeHandle,
 } from "../../utils/shape-geometry";
+import {
+  computeFitScale,
+  shapeTextBox,
+} from "../../utils/shape-text-box";
 
 /** Maps a handle side to the React Flow position it anchors to. */
 const HANDLE_POSITIONS: Record<HandleSide, Position> = {
@@ -116,6 +133,43 @@ function BaseShapeNode({
   // once, on commit, so typing never writes history entries.
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
+
+  // Shrink-to-fit — the label (and description) scale down when the
+  // wrapped text is taller or wider than the shape's safe text box,
+  // so a long label stays inside the outline instead of spilling
+  // past it. The content resets to full size whenever the text or
+  // the node size changes, then shrinks again only as far as the new
+  // text needs; while editing, the editor keeps the base size.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [fitScale, setFitScale] = useState(1);
+  const textBox = shapeTextBox(data.shape);
+
+  useEffect(() => {
+    setFitScale(1);
+  }, [
+    data.label,
+    data.description,
+    data.shape,
+    nodeWidth,
+    nodeHeight,
+    style.fontSize,
+  ]);
+
+  useLayoutEffect(() => {
+    if (editing) return;
+    const content = contentRef.current;
+    if (content === null) return;
+    const nextScale = computeFitScale(
+      {
+        scrollHeight: content.scrollHeight,
+        scrollWidth: content.scrollWidth,
+        clientHeight: content.clientHeight,
+        clientWidth: content.clientWidth,
+      },
+      fitScale
+    );
+    if (nextScale !== fitScale) setFitScale(nextScale);
+  }, [editing, data.label, data.description, nodeWidth, nodeHeight, fitScale]);
 
   const startEditing = (): void => {
     setDraft(data.label);
@@ -216,7 +270,24 @@ function BaseShapeNode({
           />
         </svg>
       )}
-      <div className="shape-node__content" onDoubleClick={startEditing}>
+      {/* The content layer sits in the shape's safe text box
+          (`shapeTextBox` in `utils/shape-text-box.ts`) — the centered
+          rectangle that lies inside this shape's outline — so the
+          label renders inside the shape on every shape type, not
+          across the full bounding box. The layer clips anything that
+          still does not fit, and the label shrinks to fit (see
+          `fitScale` above) before that backstop is reached. */}
+      <div
+        className="shape-node__content"
+        ref={contentRef}
+        style={{
+          left: `${textBox.left}%`,
+          top: `${textBox.top}%`,
+          width: `${textBox.width}%`,
+          height: `${textBox.height}%`,
+        }}
+        onDoubleClick={startEditing}
+      >
         {editing ? (
           <textarea
             className="shape-node__label-input nodrag nowheel"
@@ -243,14 +314,17 @@ function BaseShapeNode({
               className="shape-node__label"
               style={{
                 color: style.textColor,
-                fontSize: style.fontSize,
+                fontSize: style.fontSize * fitScale,
                 fontWeight: style.fontWeight,
               }}
             >
               {data.label}
             </span>
             {data.description ? (
-              <span className="shape-node__description">
+              <span
+                className="shape-node__description"
+                style={{ fontSize: 12 * fitScale }}
+              >
                 {data.description}
               </span>
             ) : null}

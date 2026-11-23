@@ -1037,15 +1037,24 @@
 }
 
 .shape-node__content {
-  position: relative;
-  width: 100%;
+  /* Absolutely positioned in the shape's safe text box — the
+     left/top/width/height come from `shapeTextBox` via the inline
+     style in BaseShapeNode, so the text sits inside the shape's
+     outline on every shape type. Anything that still does not fit
+     (a very long label at the minimum shrink size) is clipped here
+     rather than drawn past the outline. */
+  position: absolute;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 2px;
-  padding: 8px 14px;
+  padding: 0;
 }
 
 .shape-node__label {
+  max-width: 100%;
   color: #eafff0;
   font-size: 14px;
   font-weight: 500;
@@ -1096,6 +1105,7 @@
 }
 
 .shape-node__description {
+  max-width: 100%;
   color: var(--matrix-muted);
   font-size: 12px;
   line-height: 1.3;
