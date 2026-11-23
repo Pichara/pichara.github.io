@@ -6,12 +6,14 @@
  * itself holds no diagram state.
  */
 
-import { useCallback, useEffect, useMemo, useRef, type DragEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, type DragEvent, type MouseEvent as ReactMouseEvent, type RefObject } from "react";
 import {
   Background,
   BackgroundVariant,
   Controls,
+  EdgeChangeset,
   MiniMap,
+  NodeChangeset,
   ReactFlow,
   useReactFlow,
   useReactFlowStoreApi,
@@ -19,8 +21,10 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useDiagramStore } from "../../stores/diagramStore";
-import MatrixRainCorners from "./MatrixRainCorners";
 import SelectionToolbar from "./SelectionToolbar";
+import FormatPopup, {
+  type FormatPopupAnchor,
+} from "../panels/FormatPopup";
 import { customNodeTypes } from "../../nodes";
 import {
   GRID_SIZE,
@@ -35,7 +39,20 @@ import {
   viewportForBounds,
 } from "../../utils/fit-view";
 import { computeDropPosition, snapPosition } from "../../utils/geometry";
-import type { ShapeKind } from "../../types";
+import type { DiagramEdge, DiagramNode, ShapeKind } from "../../types";
+
+interface DiagramCanvasProps {
+  /** Ref to the `.studio-canvas` wrapper, owned by DiagramStudio and
+      shared with the shape library so click-to-add can measure the
+      actual canvas pane (see `utils/geometry.ts`). */
+  canvasRef: RefObject<HTMLDivElement>;
+  /** Where the format popup anchors, or null when it is closed. */
+  formatAnchor: FormatPopupAnchor | null;
+  /** Opens the format popup at a right-click point (client coords). */
+  onOpenFormatAtPoint: (x: number, y: number) => void;
+  /** Closes the format popup. */
+  onCloseFormat: () => void;
+}
 
 /**
  * Watches the store's fit-view requests and pans/zooms the camera so
@@ -91,7 +108,12 @@ function FitViewController() {
   return null;
 }
 
-export default function DiagramCanvas() {
+export default function DiagramCanvas({
+  canvasRef,
+  formatAnchor,
+  onOpenFormatAtPoint,
+  onCloseFormat,
+}: DiagramCanvasProps) {
   const nodes = useDiagramStore((state) => state.diagram.nodes);
   const edges = useDiagramStore((state) => state.diagram.edges);
   const viewport = useDiagramStore((state) => state.diagram.viewport);
@@ -146,8 +168,54 @@ export default function DiagramCanvas() {
     [addNode, viewport, snapToGrid]
   );
 
+  // The canvas wrapper rect: the format popup converts the selection's
+  // flow bounds to client coordinates through it (see FormatPopup), and
+  // the shape library measures the pane through it for click-to-add.
+  // The ref is owned by DiagramStudio and shared, not created here.
+
+  // Right-click on a node/edge opens the format popup above the click
+  // point instead of the browser menu. Right-clicking an unselected
+  // element selects only it first (standard context-menu behavior);
+  // right-clicking inside the current selection keeps the whole
+  // selection, so the popup formats every selected element at once.
+  // Right-clicking empty canvas keeps the browser menu (no handler).
+  const handleNodeContextMenu = useCallback(
+    (event: ReactMouseEvent, node: DiagramNode) => {
+      event.preventDefault();
+      if (!node.selected) {
+        const store = useDiagramStore.getState();
+        store.clearSelection();
+        store.onNodesChange(
+          new NodeChangeset([
+            { id: node.id, type: "select", selected: true },
+          ])
+        );
+      }
+      onOpenFormatAtPoint(event.clientX, event.clientY);
+    },
+    [onOpenFormatAtPoint]
+  );
+
+  const handleEdgeContextMenu = useCallback(
+    (event: ReactMouseEvent, edge: DiagramEdge) => {
+      event.preventDefault();
+      if (!edge.selected) {
+        const store = useDiagramStore.getState();
+        store.clearSelection();
+        store.onEdgesChange(
+          new EdgeChangeset([
+            { id: edge.id, type: "select", selected: true },
+          ])
+        );
+      }
+      onOpenFormatAtPoint(event.clientX, event.clientY);
+    },
+    [onOpenFormatAtPoint]
+  );
+
   return (
     <div
+      ref={canvasRef}
       className="studio-canvas"
       aria-label="Diagram canvas"
       onDragOver={handleDragOver}
@@ -159,6 +227,8 @@ export default function DiagramCanvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeContextMenu={handleNodeContextMenu}
+        onEdgeContextMenu={handleEdgeContextMenu}
         viewport={viewport}
         onViewportChange={handleViewportChange}
         nodeTypes={customNodeTypes}
@@ -197,6 +267,13 @@ export default function DiagramCanvas() {
         ) : null}
         <FitViewController />
         <SelectionToolbar />
+        {formatAnchor !== null ? (
+          <FormatPopup
+            anchor={formatAnchor}
+            onClose={onCloseFormat}
+            canvasRef={canvasRef}
+          />
+        ) : null}
         {/* No fit button here: the Controls fit calls React Flow's
             animated fitView, which frames unmeasured nodes wrong and
             stalls against the controlled viewport — the same bugs the
@@ -205,7 +282,10 @@ export default function DiagramCanvas() {
         <Controls showFitView={false} />
         <MiniMap />
       </ReactFlow>
-      <MatrixRainCorners />
+      {/* MatrixRainCorners was rendered here; removed 2026-11-23 at
+          the owner's request. The component file is kept (unused) for
+          a future re-enable — re-render it here to bring the corner
+          rain back. */}
       {nodes.length === 0 ? (
         <div className="studio-empty-state" aria-hidden="true">
           <p className="studio-empty-state__title">Start your diagram</p>
@@ -213,7 +293,8 @@ export default function DiagramCanvas() {
             Drag a shape from the library — or click one to add it here.
           </p>
           <p className="studio-empty-state__hint">
-            Double-click a shape to rename it · Press ? for shortcuts
+            Double-click a shape to rename it · Tap ? in the toolbar for
+            shortcuts
           </p>
         </div>
       ) : null}

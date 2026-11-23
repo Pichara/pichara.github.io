@@ -29,6 +29,7 @@ export const SHORTCUTS: ShortcutEntry[] = [
   { keys: "Ctrl+0", action: "Zoom to fit" },
   { keys: "Delete / Backspace", action: "Delete selection" },
   { keys: "Esc", action: "Clear selection" },
+  { keys: "F", action: "Format selection" },
   { keys: "?", action: "Show this list" },
 ];
 
@@ -38,6 +39,7 @@ export const MOUSE_TIPS: ShortcutEntry[] = [
     action: "Add it to the canvas, or click to add it at the center",
   },
   { keys: "Double-click a shape", action: "Rename it" },
+  { keys: "Right-click a shape or connection", action: "Format it" },
   { keys: "Drag on empty canvas", action: "Select several shapes at once" },
   { keys: "Space + drag / middle mouse", action: "Pan the canvas" },
   { keys: "Drag a handle", action: "Connect two shapes" },

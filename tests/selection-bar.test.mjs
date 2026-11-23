@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  edgeEndpointBounds,
   selectionBarPlacement,
   selectionBounds,
 } from "../src/PicharaStudio/utils/selection-bar.ts";
@@ -65,6 +66,59 @@ test("selectionBounds falls back to grouped children when only they are selected
       node("child", 500, 500, { selected: true, parentId: "group" }),
     ]),
     { x: 500, y: 500, width: 180, height: 60 }
+  );
+});
+
+test("edgeEndpointBounds returns null when no edge is selected", () => {
+  const edge = (id, source, target, extra = {}) => ({
+    id,
+    source,
+    target,
+    ...extra,
+  });
+  assert.equal(
+    edgeEndpointBounds(
+      [edge("e1", "a", "b")],
+      [node("a", 0, 0), node("b", 300, 200)]
+    ),
+    null
+  );
+  assert.equal(edgeEndpointBounds([], [node("a", 0, 0)]), null);
+});
+
+test("edgeEndpointBounds covers the selected edge's endpoint nodes", () => {
+  const edge = (id, source, target, extra = {}) => ({
+    id,
+    source,
+    target,
+    ...extra,
+  });
+  assert.deepEqual(
+    edgeEndpointBounds(
+      [edge("e1", "a", "b", { selected: true })],
+      [node("a", 100, 50), node("b", 300, 200)]
+    ),
+    { x: 100, y: 50, width: 380, height: 210 }
+  );
+});
+
+test("edgeEndpointBounds ignores unselected edges and missing endpoints", () => {
+  const edge = (id, source, target, extra = {}) => ({
+    id,
+    source,
+    target,
+    ...extra,
+  });
+  assert.deepEqual(
+    edgeEndpointBounds(
+      [
+        edge("e1", "a", "b", { selected: true }),
+        edge("e2", "a", "c"),
+        edge("e3", "missing", "also-missing", { selected: true }),
+      ],
+      [node("a", 0, 0), node("b", 300, 200), node("c", 900, 900)]
+    ),
+    { x: 0, y: 0, width: 480, height: 260 }
   );
 });
 

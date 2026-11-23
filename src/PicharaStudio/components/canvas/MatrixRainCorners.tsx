@@ -1,4 +1,7 @@
 /**
+ * Kept for future use — removed from the editor 2026-11-23 at the
+ * owner's request; re-render to bring the corner rain back.
+ *
  * MatrixRainCorners — digital-rain accents in the four corners of the
  * canvas, echoing the portfolio's Matrix rain without importing
  * portfolio code (the Studio module boundary forbids importing from

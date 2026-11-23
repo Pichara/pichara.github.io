@@ -253,7 +253,7 @@ export default function DiagramLibraryDialog({
           <div className="diagram-library-dialog__save-row">
             <input
               type="text"
-              className="format-panel__text-input"
+              className="format-popup__text-input"
               value={saveName}
               onChange={(event) => setSaveName(event.target.value)}
               onKeyDown={(event) => {

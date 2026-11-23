@@ -61,3 +61,39 @@ export function placePopover(
   top = Math.min(Math.max(POPOVER_MARGIN, top), maxTop);
   return { top, left };
 }
+
+/**
+ * Place a popover above its anchor (the format popup): centered on the
+ * anchor's horizontal center, its bottom edge `gap` px above the
+ * anchor's top edge; flips below the anchor when there is no room
+ * above; always clamped inside the viewport (8px margin). The anchor
+ * may be a point (zero-size rect, e.g. a right-click position) or the
+ * screen rect of the current selection. Never returns a negative top
+ * or left.
+ */
+export function placePopoverAbove(
+  anchor: AnchorRect,
+  size: PopoverSize,
+  viewport: ViewportSize,
+  gap = 6
+): { top: number; left: number } {
+  const anchorCenterX = (anchor.left + anchor.right) / 2;
+  const maxLeft = Math.max(
+    POPOVER_MARGIN,
+    viewport.width - size.width - POPOVER_MARGIN
+  );
+  const left = Math.min(
+    Math.max(POPOVER_MARGIN, anchorCenterX - size.width / 2),
+    maxLeft
+  );
+  let top = anchor.top - gap - size.height;
+  if (top < POPOVER_MARGIN) {
+    top = anchor.bottom + gap;
+  }
+  const maxTop = Math.max(
+    POPOVER_MARGIN,
+    viewport.height - size.height - POPOVER_MARGIN
+  );
+  top = Math.min(Math.max(POPOVER_MARGIN, top), maxTop);
+  return { top, left };
+}

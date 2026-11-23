@@ -5,6 +5,7 @@ import {
   cloneSelection,
   distributeNodes,
   expandToDescendants,
+  pruneDanglingEdges,
   removeSelection,
   snapshotSelection,
 } from "../src/PicharaStudio/utils/selection-ops.ts";
@@ -48,6 +49,30 @@ test("snapshotSelection keeps edges whose both ends are selected", () => {
   assert.equal(snapshot.edges[0].id, "e1");
 });
 
+test("snapshotSelection copies a single selected edge on its own", () => {
+  // No node selected — only the edge. Before the fix this snapshotted
+  // nothing, so Ctrl+C with one edge selected was a no-op.
+  const nodes = [node("a", 0, 0), node("b", 100, 0)];
+  const snapshot = snapshotSelection(nodes, [edge("e1", "a", "b", { selected: true })]);
+  assert.equal(snapshot.nodes.length, 0);
+  assert.equal(snapshot.edges.length, 1);
+  assert.equal(snapshot.edges[0].id, "e1");
+  // The ends were not copied, so the edge keeps its original nodes:
+  // pasting duplicates it between those same nodes.
+  assert.equal(snapshot.edges[0].source, "a");
+  assert.equal(snapshot.edges[0].target, "b");
+  assert.equal(snapshot.edges[0].selected, false);
+});
+
+test("snapshotSelection copies a selected node with a selected edge to an unselected node", () => {
+  const nodes = [node("a", 0, 0, { selected: true }), node("b", 100, 0)];
+  const snapshot = snapshotSelection(nodes, [edge("e1", "a", "b", { selected: true })]);
+  assert.equal(snapshot.nodes.length, 1);
+  assert.equal(snapshot.edges.length, 1);
+  assert.equal(snapshot.edges[0].source, "a");
+  assert.equal(snapshot.edges[0].target, "b");
+});
+
 test("snapshotSelection deep-copies node style", () => {
   const original = node("a", 0, 0, { selected: true });
   original.data.style = { backgroundColor: "#ff0000" };
@@ -79,6 +104,38 @@ test("cloneSelection offsets positions, remaps ids and selects the clones", () =
   assert.equal(clones.edges[0].target, "b-copy");
   // The snapshot itself is untouched, so it can be pasted again.
   assert.equal(snapshot.nodes[0].position.x, 10);
+});
+
+test("cloneSelection keeps an edge on its original nodes when its ends were not copied", () => {
+  // Edge-only snapshot: no nodes to remap, so the clone keeps the
+  // original source/target and lands between those same nodes.
+  const snapshot = {
+    nodes: [],
+    edges: [edge("e1", "a", "b")],
+  };
+  const clones = cloneSelection(snapshot, 20, (oldId) => `${oldId}-copy`);
+  assert.equal(clones.nodes.length, 0);
+  assert.equal(clones.edges.length, 1);
+  assert.equal(clones.edges[0].id, "e1-copy");
+  assert.equal(clones.edges[0].source, "a");
+  assert.equal(clones.edges[0].target, "b");
+  assert.equal(clones.edges[0].selected, true);
+});
+
+test("pruneDanglingEdges drops edges whose ends are missing", () => {
+  const edges = [
+    edge("e1", "a", "b"),
+    edge("e2", "a", "gone"),
+    edge("e3", "gone", "b"),
+  ];
+  assert.deepEqual(
+    pruneDanglingEdges(edges, new Set(["a", "b"])).map((e) => e.id),
+    ["e1"]
+  );
+  // Nothing survives when no end exists.
+  assert.deepEqual(pruneDanglingEdges(edges, new Set()), []);
+  // The input is not mutated.
+  assert.equal(edges.length, 3);
 });
 
 test("alignNodes aligns left edges", () => {

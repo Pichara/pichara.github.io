@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { placePopover } from "../src/PicharaStudio/utils/popover-placement.ts";
+import { placePopover, placePopoverAbove } from "../src/PicharaStudio/utils/popover-placement.ts";
 
 const VIEWPORT = { width: 1920, height: 1080 };
 
@@ -56,4 +56,59 @@ test("clamps the top inside the viewport when the popover is taller than it", ()
     VIEWPORT
   );
   assert.equal(placed.top, 8);
+});
+
+test("placePopoverAbove puts the popover above the anchor, centered on it", () => {
+  const placed = placePopoverAbove(
+    { left: 900, top: 500, right: 1080, bottom: 560 },
+    { width: 248, height: 300 },
+    VIEWPORT
+  );
+  // Centered on the anchor center (990): 990 - 124 = 866; above:
+  // 500 - 6 - 300 = 194.
+  assert.deepEqual(placed, { top: 194, left: 866 });
+});
+
+test("placePopoverAbove centers on a zero-size point anchor (right-click)", () => {
+  const placed = placePopoverAbove(
+    { left: 400, top: 300, right: 400, bottom: 300 },
+    { width: 248, height: 200 },
+    VIEWPORT
+  );
+  assert.deepEqual(placed, { top: 300 - 6 - 200, left: 400 - 124 });
+});
+
+test("placePopoverAbove flips below the anchor when there is no room above", () => {
+  const placed = placePopoverAbove(
+    { left: 900, top: 100, right: 1080, bottom: 160 },
+    { width: 248, height: 300 },
+    VIEWPORT
+  );
+  // Above would start at 100 - 6 - 300 = -206, so it goes below.
+  assert.deepEqual(placed, { top: 166, left: 866 });
+});
+
+test("placePopoverAbove clamps inside the viewport on every side", () => {
+  const leftEdge = placePopoverAbove(
+    { left: 10, top: 500, right: 20, bottom: 560 },
+    { width: 248, height: 300 },
+    VIEWPORT
+  );
+  assert.equal(leftEdge.left, 8);
+  assert.equal(leftEdge.top, 194);
+
+  const rightEdge = placePopoverAbove(
+    { left: 1900, top: 500, right: 1912, bottom: 560 },
+    { width: 248, height: 300 },
+    VIEWPORT
+  );
+  assert.equal(rightEdge.left, 1920 - 248 - 8);
+
+  const short = placePopoverAbove(
+    { left: 900, top: 10, right: 1080, bottom: 20 },
+    { width: 248, height: 2000 },
+    VIEWPORT
+  );
+  // No room above (flips below) and taller than the viewport: clamped.
+  assert.equal(short.top, 8);
 });

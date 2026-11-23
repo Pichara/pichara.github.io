@@ -87,11 +87,16 @@ function cloneEdgeData(edge: DiagramEdge): DiagramEdge["data"] {
 
 /**
  * Snapshot the current selection for the clipboard: deep copies of the
- * selected nodes and of the edges whose *both* ends are selected
- * (dangling edges are dropped — a paste must never reference a node
- * that was not copied). A selected group brings its children along,
- * so a pasted group still contains its shapes. Selection flags are
- * cleared in the snapshot; pasting re-selects the clones.
+ * selected nodes and of the edges that are selected themselves or whose
+ * *both* ends are selected. An edge copied without its ends keeps
+ * pointing at the original nodes — pasting it duplicates the edge
+ * between those same nodes — while an unselected edge touching an
+ * uncopied node is dropped, so a paste never references a node that
+ * does not exist (the store prunes such edges on paste as a second
+ * guard, e.g. when the endpoints were deleted after copying). A
+ * selected group brings its children along, so a pasted group still
+ * contains its shapes. Selection flags are cleared in the snapshot;
+ * pasting re-selects the clones.
  */
 export function snapshotSelection(
   nodes: DiagramNode[],
@@ -113,7 +118,9 @@ export function snapshotSelection(
     })),
     edges: edges
       .filter(
-        (edge) => selectedIds.has(edge.source) && selectedIds.has(edge.target)
+        (edge) =>
+          edge.selected ||
+          (selectedIds.has(edge.source) && selectedIds.has(edge.target))
       )
       .map((edge) => ({
         ...edge,
@@ -164,6 +171,23 @@ export function cloneSelection(
       selected: true,
     })),
   };
+}
+
+/**
+ * Drop edges whose source or target is not in `nodeIds`: a pasted edge
+ * must never dangle. Used on paste for edges copied on their own (their
+ * ends are the original nodes, which may have been deleted after the
+ * copy); edges between freshly cloned nodes always survive, since the
+ * caller passes the cloned ids as well as the live ones. Returns a new
+ * array; the input is not mutated.
+ */
+export function pruneDanglingEdges(
+  edges: DiagramEdge[],
+  nodeIds: ReadonlySet<string>
+): DiagramEdge[] {
+  return edges.filter(
+    (edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)
+  );
 }
 
 interface NodeBox {

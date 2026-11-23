@@ -3,11 +3,14 @@
  *
  * Kept deliberately slim: navigation, undo/redo, view controls, and a
  * "File" menu. Shapes live in the left sidebar
- * (`components/sidebar/ShapeLibrary.tsx`); selection actions (Copy,
- * Duplicate, Group, Ungroup, Paste) live in the floating bar that
- * appears next to the selection (`components/canvas/SelectionToolbar.tsx`),
- * and file actions (New, Diagrams, Import, Export) live in the File
- * menu — so the top bar shows only what is always relevant.
+ * (`components/sidebar/ShapeLibrary.tsx`); selection actions (Group,
+ * Ungroup) live in the floating bar that appears next to the selection
+ * (`components/canvas/SelectionToolbar.tsx`) — Copy, Duplicate and
+ * Paste are keyboard-only (Ctrl+C / Ctrl+D / Ctrl+V) — and file actions
+ * (New, Diagrams, Import, Export) live in the File menu — so the top
+ * bar shows only what is always relevant. Formatting opens as a popup
+ * above the selection from the "Format" button here (or right-click, or
+ * the F key) — it is no longer a side panel.
  */
 
 import {
@@ -41,6 +44,8 @@ interface ToolbarProps {
   onToggleMobilePanel: (panel: MobilePanel) => void;
   /** Opens the keyboard shortcuts dialog (also on the "?" key). */
   onShowShortcuts: () => void;
+  /** Opens the format popup above the current selection (also F). */
+  onOpenFormat: () => void;
 }
 
 interface ToolbarGroupProps {
@@ -108,12 +113,18 @@ export default function Toolbar({
   mobilePanel,
   onToggleMobilePanel,
   onShowShortcuts,
+  onOpenFormat,
 }: ToolbarProps) {
   const diagram = useDiagramStore((state) => state.diagram);
   const loadDiagram = useDiagramStore((state) => state.loadDiagram);
   const newDiagram = useDiagramStore((state) => state.newDiagram);
   const hasNodes = useDiagramStore(
     (state) => state.diagram.nodes.length > 0
+  );
+  const hasSelection = useDiagramStore(
+    (state) =>
+      state.diagram.nodes.some((node) => node.selected) ||
+      state.diagram.edges.some((edge) => edge.selected)
   );
   const showGrid = useDiagramStore((state) => state.showGrid);
   const snapToGrid = useDiagramStore((state) => state.snapToGrid);
@@ -226,13 +237,13 @@ export default function Toolbar({
         >
           Shapes
         </ToolbarButton>
+      </ToolbarGroup>
+      <ToolbarGroup label="Format" className="studio-toolbar__format">
         <ToolbarButton
-          onClick={() => onToggleMobilePanel("format")}
-          title="Open the format panel"
-          ariaLabel="Toggle format panel"
-          pressed={mobilePanel === "format"}
-          expanded={mobilePanel === "format"}
-          className="studio-button studio-toolbar__panel-toggle"
+          onClick={onOpenFormat}
+          disabled={!hasSelection}
+          title="Format the selection (F)"
+          ariaLabel="Format selection"
         >
           Format
         </ToolbarButton>

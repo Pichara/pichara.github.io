@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { boundingBox, snapPosition } from "../src/PicharaStudio/utils/geometry.ts";
+import {
+  boundingBox,
+  computeSpawnPositionFromPane,
+  snapPosition,
+} from "../src/PicharaStudio/utils/geometry.ts";
 
 test("snapPosition rounds each axis to the nearest grid intersection", () => {
   assert.deepEqual(snapPosition({ x: 7, y: 23 }, 15), { x: 0, y: 30 });
@@ -32,4 +36,48 @@ test("boundingBox handles a single rect with negative positions", () => {
     maxX: -10,
     maxY: 10,
   });
+});
+
+test("computeSpawnPositionFromPane centers on the pane, not the window", () => {
+  // Desktop window 1000x800 with the 200px sidebar open, 48px toolbar
+  // and 28px status bar: the pane is 800x724 starting at (200, 48).
+  // The old window-based spawn used 1000x752 and landed off-centre.
+  const position = computeSpawnPositionFromPane(
+    { left: 200, top: 48, width: 800, height: 724 },
+    { x: 0, y: 0, zoom: 1 },
+    0
+  );
+  // Node is 180x60, so its top-left sits half a node left/up of center.
+  assert.deepEqual(position, { x: 310, y: 332 });
+});
+
+test("computeSpawnPositionFromPane centers on a full-width mobile pane", () => {
+  // Narrow screen: the library is an overlay drawer, so the pane keeps
+  // the full window width (390px) below the 48px toolbar.
+  const position = computeSpawnPositionFromPane(
+    { left: 0, top: 48, width: 390, height: 700 },
+    { x: 0, y: 0, zoom: 1 },
+    0
+  );
+  assert.deepEqual(position, { x: 105, y: 320 });
+});
+
+test("computeSpawnPositionFromPane ignores the pane's screen offset", () => {
+  // React Flow's viewport offset is relative to the pane's own origin,
+  // so two panes of the same size at different screen positions must
+  // spawn at the same flow position.
+  const viewport = { x: 20, y: 10, zoom: 2 };
+  const a = computeSpawnPositionFromPane(
+    { left: 200, top: 48, width: 800, height: 600 },
+    viewport,
+    40
+  );
+  const b = computeSpawnPositionFromPane(
+    { left: 0, top: 0, width: 800, height: 600 },
+    viewport,
+    40
+  );
+  assert.deepEqual(a, b);
+  // center: ((400 - 20) / 2 - 90, (300 - 10) / 2 - 30) + 40 offset
+  assert.deepEqual(a, { x: 140, y: 155 });
 });

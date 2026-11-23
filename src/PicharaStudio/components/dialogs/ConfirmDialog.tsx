@@ -5,7 +5,10 @@
  * template/open/delete in the library): native confirms are auto-dismissed
  * by automated browsers — so the action silently does nothing, with no
  * confirmation ever shown — and they cannot be styled to the Matrix
- * theme. Same backdrop/dialog styles as the library dialog. Esc (capture
+ * theme. Same backdrop dimming and dialog styles as the library
+ * dialog, but on a vertically centred backdrop: the short confirm box
+ * parked at the top under the library backdrop's 64px offset read as a
+ * floating panel, not a modal. Esc (capture
  * phase, so it wins over the editor's own Esc handler, which clears the
  * selection), backdrop click and ✕ cancel; the Cancel button starts
  * focused, so Enter never confirms by accident.
@@ -82,7 +85,7 @@ export default function ConfirmDialog({
 
   return createPortal(
     <div
-      className="diagram-library-dialog__backdrop"
+      className="confirm-dialog__backdrop"
       onClick={onCancel}
       role="presentation"
     >

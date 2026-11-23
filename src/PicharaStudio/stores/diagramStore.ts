@@ -51,6 +51,7 @@ import {
   alignNodes,
   cloneSelection,
   distributeNodes,
+  pruneDanglingEdges,
   removeSelection,
   snapshotSelection,
   type AlignKind,
@@ -256,13 +257,17 @@ interface DiagramStore {
   /** Clear the selection. Selection is not an undoable step. */
   clearSelection: () => void;
 
-  /** Copy the selected nodes (and edges between them) to the clipboard. */
+  /** Copy the selection to the clipboard: selected nodes with the
+   * edges between them, plus any selected edges on their own (a pasted
+   * edge on its own re-attaches to its original nodes). No-op when
+   * nothing is selected. */
   copySelection: () => void;
 
   /**
    * Paste the clipboard as fresh nodes/edges, offset so they do not land
    * exactly on the originals, and select the pasted copies. No-op when
-   * the clipboard is empty. Records one undo step.
+   * the clipboard is empty, or when everything on it dangles (an edge
+   * copied on its own whose nodes were deleted since). Records one undo step.
    */
   pasteClipboard: () => void;
 
@@ -433,7 +438,12 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
 
   copySelection: () => {
     const { diagram } = get();
-    if (!diagram.nodes.some((node) => node.selected)) return;
+    // A single selected edge copies too — the node-only guard used to
+    // make Ctrl+C a no-op for an edge-only selection.
+    const hasSelection =
+      diagram.nodes.some((node) => node.selected) ||
+      diagram.edges.some((edge) => edge.selected);
+    if (!hasSelection) return;
     set({
       clipboard: snapshotSelection(diagram.nodes, diagram.edges),
       pasteCount: 0,
@@ -448,9 +458,19 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
       PASTE_OFFSET * (pasteCount + 1),
       () => generateId()
     );
+    // An edge copied on its own still points at its original nodes, so
+    // drop it when those nodes are gone (deleted after copying) — a
+    // paste must never leave a dangling edge behind. Edges between
+    // cloned nodes always survive: their fresh ids are in the set too.
+    const liveIds = new Set([
+      ...diagram.nodes.map((node) => node.id),
+      ...clones.nodes.map((node) => node.id),
+    ]);
+    const edges = pruneDanglingEdges(clones.edges, liveIds);
+    if (clones.nodes.length === 0 && edges.length === 0) return;
     recordHistory(diagram);
     set((state) => ({
-      diagram: appendElements(state.diagram, clones.nodes, clones.edges),
+      diagram: appendElements(state.diagram, clones.nodes, edges),
       pasteCount: state.pasteCount + 1,
     }));
   },
@@ -458,7 +478,7 @@ export const useDiagramStore = create<DiagramStore>()((set, get) => ({
   duplicateSelection: () => {
     const { diagram } = get();
     const snapshot = snapshotSelection(diagram.nodes, diagram.edges);
-    if (snapshot.nodes.length === 0) return;
+    if (snapshot.nodes.length === 0 && snapshot.edges.length === 0) return;
     const clones = cloneSelection(snapshot, PASTE_OFFSET, () => generateId());
     recordHistory(diagram);
     set((state) => ({

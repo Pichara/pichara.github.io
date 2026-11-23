@@ -14,6 +14,7 @@
  * Without a modifier:
  * - Delete / Backspace: delete the selection (one undo step)
  * - Escape: clear the selection
+ * - F: open the format popup for the selection
  * - ?: open the keyboard shortcuts dialog
  *
  * Shortcuts are ignored while typing in an editable element (input,
@@ -23,7 +24,8 @@
  *
  * The "?" shortcut needs a callback because the dialog lives in
  * `components/DiagramStudio.tsx`, above this hook's owner: pass
- * `onOpenShortcuts` to open it.
+ * `onOpenShortcuts` to open it. Same for the format popup (`F`):
+ * pass `onOpenFormat` to open it for the current selection.
  */
 
 import { useEffect } from "react";
@@ -38,7 +40,8 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 export function useKeyboardShortcuts(
-  onOpenShortcuts?: () => void
+  onOpenShortcuts?: () => void,
+  onOpenFormat?: () => void
 ): void {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -88,6 +91,16 @@ export function useKeyboardShortcuts(
         store.deleteSelection();
       } else if (key === "escape") {
         store.clearSelection();
+      } else if (key === "f") {
+        // No-op without a selection: the popup formats the selection,
+        // and there is nothing to format.
+        if (
+          store.diagram.nodes.some((node) => node.selected) ||
+          store.diagram.edges.some((edge) => edge.selected)
+        ) {
+          event.preventDefault();
+          onOpenFormat?.();
+        }
       } else if (key === "?") {
         event.preventDefault();
         onOpenShortcuts?.();
@@ -96,5 +109,5 @@ export function useKeyboardShortcuts(
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onOpenShortcuts]);
+  }, [onOpenShortcuts, onOpenFormat]);
 }

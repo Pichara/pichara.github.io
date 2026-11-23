@@ -2,17 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { toggleMobilePanel } from "../src/PicharaStudio/utils/mobile-panels.ts";
 
-test("toggleMobilePanel opens a panel when none is open", () => {
+// The format panel used to be a second drawer here; it was removed
+// 2026-11-23 (formatting is now a popup), so the shape library is the
+// only mobile drawer left.
+
+test("toggleMobilePanel opens the shapes drawer when none is open", () => {
   assert.equal(toggleMobilePanel(null, "shapes"), "shapes");
-  assert.equal(toggleMobilePanel(null, "format"), "format");
 });
 
-test("toggleMobilePanel closes the panel when it is already open", () => {
+test("toggleMobilePanel closes the drawer when it is already open", () => {
   assert.equal(toggleMobilePanel("shapes", "shapes"), null);
-  assert.equal(toggleMobilePanel("format", "format"), null);
-});
-
-test("toggleMobilePanel switches to the other panel", () => {
-  assert.equal(toggleMobilePanel("shapes", "format"), "format");
-  assert.equal(toggleMobilePanel("format", "shapes"), "shapes");
 });

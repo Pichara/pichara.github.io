@@ -151,6 +151,15 @@
   border-radius: 2px;
 }
 
+/* Resize controls sit on the shape border (see resizeHandleAnchor in
+   utils/shape-geometry.ts), so they must paint above the shape: they
+   are the first children of .shape-node and the background layer is a
+   later positioned sibling, which would otherwise paint over the half
+   of each dot that overlaps the fill. */
+.studio-canvas .react-flow__resize-control {
+  z-index: 1;
+}
+
 .studio-canvas .react-flow__resize-control.line {
   border-color: rgba(124, 251, 176, 0.65);
 }
@@ -265,34 +274,90 @@
   margin: auto 0 0;
 }
 
-/* --- Format panel --- */
+/* Header row holding the desktop collapse chevron and the mobile
+   close button (only one of the two is ever visible: the collapse
+   chevron is hidden below 768px, the close button above it). */
+.shape-library__header {
+  display: flex;
+  justify-content: flex-end;
+}
 
-.format-panel {
-  width: 232px;
+.shape-library__collapse {
+  padding: 2px 10px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+/* Slim rail left on the editor's left edge while the shape library
+   is collapsed: the canvas takes the freed space and the expand
+   chevron brings the sidebar back exactly as before. */
+.shape-library-rail {
+  width: 28px;
   flex: none;
   background: var(--matrix-panel);
-  border-left: 1px solid var(--matrix-line);
+  border-right: 1px solid var(--matrix-line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.shape-library-rail__button {
+  padding: 4px 6px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+/* --- Format popup --- */
+
+/* Context popup above the clicked item (or the selection), rendered in
+   a portal to document.body and placed from its anchor rect, so no
+   ancestor filter or canvas scroll can move or clip it. Fixed
+   position, max-height so it never runs off the viewport on short
+   screens. z-index sits below the color picker popover (45) — the
+   picker opens from a swatch inside this popup — and below dialog
+   backdrops (50). */
+.format-popup {
+  position: fixed;
+  z-index: 44;
+  width: 248px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
   overflow-y: auto;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background: rgba(3, 12, 7, 0.97);
+  border: 1px solid var(--matrix-line-strong);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 24px var(--matrix-glow);
 }
 
-.format-panel__title {
+.format-popup:focus {
+  outline: none;
+}
+
+.format-popup__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.format-popup__title {
   font: 700 15px/1.3 "Space Grotesk", sans-serif;
   color: #f5fff6;
   margin: 0;
 }
 
-.format-panel__hint {
-  font-size: 13px;
-  color: var(--matrix-muted);
-  line-height: 1.5;
-  margin: 0;
+.format-popup__close {
+  padding: 2px 8px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
-.format-panel__section-title {
+.format-popup__section-title {
   font: 600 11px/1.4 "IBM Plex Mono", monospace;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -300,31 +365,31 @@
   margin: 0 0 10px;
 }
 
-.format-panel section {
+.format-popup section {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.format-panel__field {
+.format-popup__field {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.format-panel__label {
+.format-popup__label {
   font-size: 12px;
   font-weight: 600;
   color: #c0d9c7;
 }
 
-.format-panel__color-row {
+.format-popup__color-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.format-panel__color-input {
+.format-popup__color-input {
   appearance: none;
   width: 36px;
   height: 28px;
@@ -335,21 +400,21 @@
   cursor: pointer;
 }
 
-.format-panel__color-input::-webkit-color-swatch-wrapper {
+.format-popup__color-input::-webkit-color-swatch-wrapper {
   padding: 2px;
 }
 
-.format-panel__color-input::-webkit-color-swatch {
+.format-popup__color-input::-webkit-color-swatch {
   border: none;
   border-radius: 4px;
 }
 
-.format-panel__color-value {
+.format-popup__color-value {
   font: 500 12px "IBM Plex Mono", monospace;
   color: var(--matrix-faint);
 }
 
-.format-panel__select {
+.format-popup__select {
   appearance: auto;
   border: 1px solid rgba(113, 191, 130, 0.27);
   border-radius: 6px;
@@ -360,7 +425,7 @@
   cursor: pointer;
 }
 
-.format-panel__text-input {
+.format-popup__text-input {
   border: 1px solid rgba(113, 191, 130, 0.27);
   border-radius: 6px;
   background: rgba(3, 11, 7, 0.9);
@@ -370,9 +435,9 @@
   width: 100%;
 }
 
-.format-panel__select:focus-visible,
-.format-panel__text-input:focus-visible,
-.format-panel__color-input:focus-visible {
+.format-popup__select:focus-visible,
+.format-popup__text-input:focus-visible,
+.format-popup__color-input:focus-visible {
   outline: none;
   border-color: #80fba6;
   box-shadow: 0 0 0 2px rgba(70, 190, 93, 0.25);
@@ -481,7 +546,7 @@
   margin: 0;
 }
 
-.format-panel__check {
+.format-popup__check {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -491,25 +556,25 @@
   cursor: pointer;
 }
 
-.format-panel__check input {
+.format-popup__check input {
   accent-color: #4ade80;
 }
 
-.format-panel__reset {
+.format-popup__reset {
   align-self: flex-start;
 }
 
-.format-panel__arrange-grid {
+.format-popup__arrange-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
 }
 
-.format-panel__arrange-grid--two {
+.format-popup__arrange-grid--two {
   grid-template-columns: repeat(2, 1fr);
 }
 
-.format-panel__arrange-button {
+.format-popup__arrange-button {
   padding: 5px 4px;
   font-size: 12px;
   text-align: center;
@@ -583,6 +648,11 @@
   gap: 6px;
 }
 
+.studio-toolbar__format {
+  display: flex;
+  gap: 6px;
+}
+
 .studio-toolbar__view {
   display: flex;
   gap: 6px;
@@ -646,7 +716,7 @@
 
 /* Absolutely positioned inside the React Flow wrapper, next to the
    current selection (see SelectionToolbar.tsx). Only visible when a
-   selection or clipboard content makes its actions relevant. */
+   selection makes its actions relevant. */
 .selection-toolbar {
   position: absolute;
   z-index: 10;
@@ -681,14 +751,6 @@
 .selection-toolbar__button:focus-visible {
   outline: 2px solid var(--matrix-focus);
   outline-offset: -2px;
-}
-
-.selection-toolbar__divider {
-  width: 1px;
-  height: 20px;
-  background: var(--matrix-line);
-  flex: none;
-  margin: 0 2px;
 }
 
 .studio-button {
@@ -750,15 +812,29 @@
 
 /* --- Diagram library dialog --- */
 
-.diagram-library-dialog__backdrop {
+/* The library and confirm backdrops share one dimming: fixed, full
+   viewport, same dark veil, same stacking. Only the alignment differs
+   — the tall library dialog is top-anchored under a 64px offset, while
+   the short confirm box is vertically centred, so it reads as a modal
+   instead of a panel parked at the top of the page. */
+.diagram-library-dialog__backdrop,
+.confirm-dialog__backdrop {
   position: fixed;
   inset: 0;
   background: rgba(1, 6, 4, 0.72);
   display: flex;
-  align-items: flex-start;
   justify-content: center;
-  padding: 64px 16px 16px;
   z-index: 50;
+}
+
+.diagram-library-dialog__backdrop {
+  align-items: flex-start;
+  padding: 64px 16px 16px;
+}
+
+.confirm-dialog__backdrop {
+  align-items: center;
+  padding: 16px;
 }
 
 .diagram-library-dialog {
@@ -1018,23 +1094,46 @@
   overflow-wrap: anywhere;
 }
 
-/* Inline label editor (double-click). Transparent so the shape's fill
-   stays visible; sized like the label it replaces. */
+/* Inline label editor (double-click). Borderless and transparent: the
+   text edits in place and looks like the label itself — no box chrome
+   (no border, background, shadow, or outline) in any state, including
+   focus. The global `::focus-visible` outline in `src/index.css` is
+   explicitly switched off here, otherwise it would draw a box around
+   the field; the caret and selection still show where editing happens.
+   Typography comes from the node's own style via the inline style on
+   the textarea in `BaseShapeNode`, so the edit field matches the label
+   exactly; the values here are only fallbacks for the default style. */
 .shape-node__label-input {
   width: 100%;
   min-width: 0;
-  padding: 2px 4px;
-  border: 1px dashed var(--matrix-accent);
-  border-radius: 4px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
   outline: none;
-  background: rgba(3, 11, 7, 0.92);
+  outline-offset: 0;
+  box-shadow: none;
+  background: transparent;
   color: var(--matrix-text);
   font-size: 14px;
   font-weight: 500;
+  font-family: inherit;
   line-height: 1.3;
   text-align: center;
+  caret-color: currentColor;
   resize: none;
   overflow-wrap: anywhere;
+}
+
+/* Focus must stay box-free too: no outline (see the note above), no
+   border, background, or shadow. */
+.shape-node__label-input:focus,
+.shape-node__label-input:focus-visible {
+  border: none;
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
 .shape-node__description {
@@ -1089,9 +1188,11 @@
 
 /* --- Mobile layout (narrow screens) --- */
 
-/* Panel toggle buttons in the toolbar and the close button inside each
-   panel only exist for the drawer layout below; on desktop both panels
-   are always-visible sidebars, so these controls stay hidden. */
+/* The shape-library toggle button in the toolbar and the close button
+   inside the library only exist for the drawer layout below; on desktop
+   the library is an always-visible sidebar, so these controls stay
+   hidden. (The format panel used to be a second drawer here; it was
+   removed 2026-11-23 — formatting is now a popup.) */
 .studio-toolbar__panels {
   display: flex;
   gap: 8px;
@@ -1121,41 +1222,40 @@
   }
 
   /* The diagram name is also shown in the Diagrams dialog; hiding it
-     here keeps the Shapes/Format toggles visible without scrolling. */
+     here keeps the Shapes toggle visible without scrolling. */
   .studio-toolbar__diagram-name {
     display: none;
   }
 
-  /* Both side panels leave the flex row and become overlay drawers
+  /* The shape library leaves the flex row and becomes an overlay drawer
      anchored under the toolbar and above the status bar, so the canvas
      keeps the full screen width. Hidden until opened from the toolbar. */
-  .shape-library,
-  .format-panel {
+  .shape-library {
     display: none;
     position: fixed;
     top: 48px;
     bottom: 28px;
+    left: 0;
     z-index: 30;
     width: min(280px, 85vw);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 24px var(--matrix-glow);
   }
 
-  .shape-library {
-    left: 0;
-  }
-
-  .format-panel {
-    right: 0;
-  }
-
-  .shape-library.is-mobile-open,
-  .format-panel.is-mobile-open {
+  .shape-library.is-mobile-open {
     display: flex;
   }
 
   .studio-panel__close {
     display: inline-block;
     align-self: flex-end;
+  }
+
+  /* On narrow screens the library is a drawer opened from the
+     toolbar, so the desktop collapse chevron and expand rail stay
+     hidden and cannot fight the drawer. */
+  .shape-library__collapse,
+  .shape-library-rail {
+    display: none;
   }
 
   /* The minimap would cover a large share of a phone-sized canvas. */

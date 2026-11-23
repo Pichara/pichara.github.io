@@ -31,6 +31,33 @@ export function computeSpawnPosition(
 }
 
 /**
+ * Spawn position from the canvas pane's bounding rect (the
+ * `.studio-canvas` wrapper, which the React Flow pane fills exactly).
+ *
+ * This is the click-to-add path: the pane — not the window — is the
+ * visible canvas, so its width/height are the container size. No fixed
+ * panel widths are subtracted: on desktop the sidebar narrows the pane
+ * and on mobile the library is an overlay drawer that leaves the pane
+ * full-width, and the rect already reflects whichever layout is live.
+ * Only the rect's size matters here — React Flow's viewport offset is
+ * relative to the pane's own origin, so `left`/`top` never enter the
+ * formula (mirrors `computeDropPosition`, which subtracts them from
+ * client coordinates for the same reason).
+ */
+export function computeSpawnPositionFromPane(
+  paneRect: { width: number; height: number },
+  viewport: Viewport,
+  spawnOffset: number
+): NodePosition {
+  return computeSpawnPosition(
+    viewport,
+    spawnOffset,
+    paneRect.width,
+    paneRect.height
+  );
+}
+
+/**
  * Convert a drop point (client/screen pixels) into canvas coordinates,
  * centering the new node under the cursor.
  *

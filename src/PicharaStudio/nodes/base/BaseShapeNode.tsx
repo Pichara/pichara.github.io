@@ -8,9 +8,16 @@
  * (a clip-path would cut the border off). The content layer carries the
  * label on top of either background.
  *
- * Interactions: double-click the label to edit it inline (Enter commits,
+ * Interactions: double-click the label to edit it inline — the text
+ * itself becomes editable with no visible box around it (Enter commits,
  * Escape cancels, an empty label keeps the previous text); when the node
- * is selected, React Flow's NodeResizer shows handles to resize it.
+ * is selected, `NodeResizeControl`s show handles to resize it — the four
+ * corner dots sit on the shape's border (`resizeHandleAnchor` in
+ * `utils/shape-geometry.ts`) and the four edge lines run along the
+ * bounding-box sides, as `NodeResizer` did before.
+ * Connection handles come from `shapeHandles` in `utils/shape-geometry.ts`
+ * — every attach point carries both a target and a source handle, so
+ * edges can start from or land on any of them.
  * Resizing writes explicit width/height on the node, so the component
  * renders those when present and falls back to the defaults otherwise.
  * The fallback also covers the fresh-node case: React Flow v13 passes
@@ -18,11 +25,12 @@
  * 0x0 — see `utils/node-size.ts`.
  */
 
-import { memo, useState, type KeyboardEvent } from "react";
+import { memo, useState, type CSSProperties, type KeyboardEvent } from "react";
 import {
   Handle,
-  NodeResizer,
+  NodeResizeControl,
   Position,
+  ResizeControlVariant,
   type Node,
   type NodeProps,
 } from "@xyflow/react";
@@ -32,7 +40,60 @@ import { useDiagramStore } from "../../stores/diagramStore";
 import { resolveNodeStyle } from "../../utils/apply-style";
 import { commitLabelEdit } from "../../utils/node-editing";
 import { resolveNodeSize } from "../../utils/node-size";
-import { shapePolygonPoints } from "../../utils/shape-geometry";
+import {
+  resizeHandleAnchor,
+  shapeHandles,
+  shapePolygonPoints,
+  type HandleSide,
+  type ResizeCorner,
+  type ShapeHandle,
+} from "../../utils/shape-geometry";
+
+/** Maps a handle side to the React Flow position it anchors to. */
+const HANDLE_POSITIONS: Record<HandleSide, Position> = {
+  top: Position.Top,
+  right: Position.Right,
+  bottom: Position.Bottom,
+  left: Position.Left,
+};
+
+/**
+ * CSS offset for a handle whose point is not its side midpoint.
+ * Side midpoints need no offset — the handle class already centers them.
+ * A right-side handle also needs `right: auto`, otherwise the class's
+ * `right: 0` would fight the `left` offset.
+ */
+function handleStyle(handle: ShapeHandle): CSSProperties | undefined {
+  const isMidpoint =
+    handle.side === "top" || handle.side === "bottom"
+      ? handle.x === 50
+      : handle.side === "left"
+        ? handle.x === 0
+        : handle.x === 100;
+  if (isMidpoint) return undefined;
+  return handle.side === "right"
+    ? { left: `${handle.x}%`, right: "auto" }
+    : { left: `${handle.x}%` };
+}
+
+/**
+ * Corner resize controls, in render order. The `position` is the
+ * control's logical corner — it fixes the drag direction (which edges
+ * move) exactly as `NodeResizer`'s corner handles did. The rendered
+ * position comes from `resizeHandleAnchor` instead: the library's
+ * default puts every corner handle on the bounding-box corner, but
+ * only the rectangle's outline passes through there, so on the other
+ * shapes the dots floated in empty space away from the border.
+ */
+const RESIZE_CORNERS: ResizeCorner[] = [
+  "top-left",
+  "top-right",
+  "bottom-left",
+  "bottom-right",
+];
+
+/** Edge resize controls (the lines along the bounding-box sides). */
+const RESIZE_LINE_SIDES = ["top", "right", "bottom", "left"] as const;
 
 function BaseShapeNode({
   id,
@@ -90,7 +151,40 @@ function BaseShapeNode({
       }}
     >
       {selected ? (
-        <NodeResizer minWidth={MIN_NODE_WIDTH} minHeight={MIN_NODE_HEIGHT} />
+        <>
+          {/* Corner handles, centered on the shape's border — see
+              `resizeHandleAnchor` in `utils/shape-geometry.ts`. The
+              inline left/top overrides the library's bounding-box
+              corner positioning; the library's `translate: -50% -50%`
+              still centers the dot on the anchor point. Same min size
+              and drag directions as the NodeResizer this replaces. */}
+          {RESIZE_CORNERS.map((corner) => {
+            const anchor = resizeHandleAnchor(data.shape, corner);
+            return (
+              <NodeResizeControl
+                key={corner}
+                position={corner}
+                minWidth={MIN_NODE_WIDTH}
+                minHeight={MIN_NODE_HEIGHT}
+                style={{
+                  left: `${anchor.x}%`,
+                  top: `${anchor.y}%`,
+                }}
+              />
+            );
+          })}
+          {/* Edge lines, unchanged from NodeResizer: they run along
+              the bounding-box sides and resize one axis each. */}
+          {RESIZE_LINE_SIDES.map((side) => (
+            <NodeResizeControl
+              key={side}
+              variant={ResizeControlVariant.Line}
+              position={side}
+              minWidth={MIN_NODE_WIDTH}
+              minHeight={MIN_NODE_HEIGHT}
+            />
+          ))}
+        </>
       ) : null}
       {polygonPoints === null ? (
         <div
@@ -128,6 +222,14 @@ function BaseShapeNode({
             className="shape-node__label-input nodrag nowheel"
             value={draft}
             autoFocus
+            // Same typography as the label span below, so the field
+            // looks like the text itself — borderless, transparent
+            // (see `.shape-node__label-input` in DiagramStudio.css).
+            style={{
+              color: style.textColor,
+              fontSize: style.fontSize,
+              fontWeight: style.fontWeight,
+            }}
             onFocus={(event) => event.target.select()}
             onChange={(event) => setDraft(event.target.value)}
             onBlur={commitEditing}
@@ -155,8 +257,18 @@ function BaseShapeNode({
           </>
         )}
       </div>
-      <Handle type="target" position={Position.Top} />
-      <Handle type="source" position={Position.Bottom} />
+      {/* Connection handles for this shape (see `utils/shape-geometry.ts`):
+          every point carries both a target and a source handle, so edges
+          can start from or land on any of them. */}
+      {shapeHandles(data.shape).map((handle) => (
+        <Handle
+          key={handle.id}
+          id={handle.id}
+          type={handle.type}
+          position={HANDLE_POSITIONS[handle.side]}
+          style={handleStyle(handle)}
+        />
+      ))}
     </div>
   );
 }

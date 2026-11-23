@@ -20,6 +20,7 @@ const HANDLED_SHORTCUTS = [
   "Ctrl+0",
   "Delete / Backspace",
   "Esc",
+  "F",
   "?",
 ];
 

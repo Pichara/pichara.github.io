@@ -1,5 +1,5 @@
 /**
- * ColorPicker — in-DOM color picker for the Format panel.
+ * ColorPicker — in-DOM color picker for the Format popup.
  *
  * The native `<input type="color">` opens an OS-level popup that mouse
  * clicks cannot reliably reach: in some browsers (and in automated ones)
@@ -144,13 +144,13 @@ export default function ColorPicker({
   }, [hexText, value, onChange, close]);
 
   return (
-    <label className="format-panel__field">
-      <span className="format-panel__label">{label}</span>
-      <span className="format-panel__color-row">
+    <label className="format-popup__field">
+      <span className="format-popup__label">{label}</span>
+      <span className="format-popup__color-row">
         <button
           ref={buttonRef}
           type="button"
-          className="format-panel__color-input color-picker__swatch"
+          className="format-popup__color-input color-picker__swatch"
           style={{ backgroundColor: value }}
           onClick={() => {
             setHexText(value);
@@ -161,7 +161,7 @@ export default function ColorPicker({
           aria-expanded={open}
           title={`${label}: ${value} — click to change`}
         />
-        <code className="format-panel__color-value">{value}</code>
+        <code className="format-popup__color-value">{value}</code>
       </span>
       {open
         ? createPortal(
