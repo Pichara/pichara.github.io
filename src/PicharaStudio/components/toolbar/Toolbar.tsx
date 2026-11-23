@@ -9,8 +9,9 @@
  * Paste are keyboard-only (Ctrl+C / Ctrl+D / Ctrl+V) — and file actions
  * (New, Diagrams, Import, Export) live in the File menu — so the top
  * bar shows only what is always relevant. Formatting opens as a popup
- * above the selection from the "Format" button here (or right-click, or
- * the F key) — it is no longer a side panel.
+ * above the selection from right-click or the F key — it is no longer
+ * a side panel, and there is no toolbar button for it (the "Format"
+ * button was removed 2026-11-23 at the owner's request).
  */
 
 import {
@@ -44,8 +45,6 @@ interface ToolbarProps {
   onToggleMobilePanel: (panel: MobilePanel) => void;
   /** Opens the keyboard shortcuts dialog (also on the "?" key). */
   onShowShortcuts: () => void;
-  /** Opens the format popup above the current selection (also F). */
-  onOpenFormat: () => void;
 }
 
 interface ToolbarGroupProps {
@@ -113,18 +112,12 @@ export default function Toolbar({
   mobilePanel,
   onToggleMobilePanel,
   onShowShortcuts,
-  onOpenFormat,
 }: ToolbarProps) {
   const diagram = useDiagramStore((state) => state.diagram);
   const loadDiagram = useDiagramStore((state) => state.loadDiagram);
   const newDiagram = useDiagramStore((state) => state.newDiagram);
   const hasNodes = useDiagramStore(
     (state) => state.diagram.nodes.length > 0
-  );
-  const hasSelection = useDiagramStore(
-    (state) =>
-      state.diagram.nodes.some((node) => node.selected) ||
-      state.diagram.edges.some((edge) => edge.selected)
   );
   const showGrid = useDiagramStore((state) => state.showGrid);
   const snapToGrid = useDiagramStore((state) => state.snapToGrid);
@@ -236,16 +229,6 @@ export default function Toolbar({
           className="studio-button studio-toolbar__panel-toggle"
         >
           Shapes
-        </ToolbarButton>
-      </ToolbarGroup>
-      <ToolbarGroup label="Format" className="studio-toolbar__format">
-        <ToolbarButton
-          onClick={onOpenFormat}
-          disabled={!hasSelection}
-          title="Format the selection (F)"
-          ariaLabel="Format selection"
-        >
-          Format
         </ToolbarButton>
       </ToolbarGroup>
       <span className="studio-toolbar__spacer" aria-hidden="true" />

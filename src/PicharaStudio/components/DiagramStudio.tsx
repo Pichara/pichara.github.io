@@ -5,7 +5,7 @@
  * in the middle, status bar at the bottom. The canvas takes the full
  * width between the library and the right edge: formatting is no longer
  * a right-side panel — it opens as a popup above the clicked item
- * (right-click, toolbar "Format" button, or the F key; see
+ * (right-click or the F key; see
  * `components/panels/FormatPopup.tsx`). This component is lazy-loaded
  * by the router, so the portfolio never downloads editor code until
  * the user opens /diagram.
@@ -45,9 +45,9 @@ export default function DiagramStudio() {
   // Where the format popup anchors, or null when it is closed. The
   // popup itself renders inside the canvas (it needs the React Flow
   // tree to convert the selection's flow bounds to screen pixels);
-  // the anchor lives here so the toolbar button and the F key (both
-  // handled above the canvas) can open it for the current selection,
-  // while right-click opens it at the click point (see DiagramCanvas).
+  // the anchor lives here so the F key (handled above the canvas) can
+  // open it for the current selection, while right-click opens it at
+  // the click point (see DiagramCanvas).
   const [formatAnchor, setFormatAnchor] =
     useState<FormatPopupAnchor | null>(null);
   const closeFormatPopup = useCallback(() => setFormatAnchor(null), []);
@@ -90,7 +90,6 @@ export default function DiagramStudio() {
           setMobilePanel((current) => toggleMobilePanel(current, panel))
         }
         onShowShortcuts={openShortcuts}
-        onOpenFormat={openFormatForSelection}
       />
       <main className="studio-main">
         {isShapeLibraryVisible(shapesCollapsed, mobilePanel) ? (

@@ -310,24 +310,26 @@
 
 /* --- Format popup --- */
 
-/* Context popup above the clicked item (or the selection), rendered in
-   a portal to document.body and placed from its anchor rect, so no
-   ancestor filter or canvas scroll can move or clip it. Fixed
-   position, max-height so it never runs off the viewport on short
-   screens. z-index sits below the color picker popover (45) — the
-   picker opens from a swatch inside this popup — and below dialog
-   backdrops (50). */
+/* One compact horizontal strip above the clicked item (or the
+   selection), rendered in a portal to document.body and placed from
+   its anchor rect, so no ancestor filter or canvas scroll can move or
+   clip it. Fixed position, width fits its single row of controls
+   (swatches, compact selects, icon buttons); on narrow screens it
+   scrolls horizontally instead of wrapping or overflowing. z-index
+   sits below the color picker popover (45) — the picker opens from a
+   swatch inside this popup — and below dialog backdrops (50). */
 .format-popup {
   position: fixed;
   z-index: 44;
-  width: 248px;
+  width: max-content;
   max-width: calc(100vw - 16px);
-  max-height: calc(100dvh - 16px);
-  overflow-y: auto;
-  padding: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 10px;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   background: rgba(3, 12, 7, 0.97);
   border: 1px solid var(--matrix-line-strong);
   border-radius: 10px;
@@ -338,43 +340,36 @@
   outline: none;
 }
 
-.format-popup__header {
+/* One control group inside the strip (shape controls, connection
+   controls); a mixed selection shows both groups side by side,
+   separated by a divider, still in the single row. */
+.format-popup__row {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
+  flex: none;
 }
 
-.format-popup__title {
-  font: 700 15px/1.3 "Space Grotesk", sans-serif;
-  color: #f5fff6;
-  margin: 0;
+.format-popup__divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--matrix-line-strong);
+  flex: none;
 }
 
-.format-popup__close {
-  padding: 2px 8px;
-  font-size: 14px;
+/* Icon-only button in the strip (reset ↺, arrowhead →). The
+   arrowhead toggle reuses .studio-button's aria-pressed styling. */
+.format-popup__icon-button {
+  padding: 4px 8px;
+  font-size: 13px;
   line-height: 1.4;
-}
-
-.format-popup__section-title {
-  font: 600 11px/1.4 "IBM Plex Mono", monospace;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #8cf6ad;
-  margin: 0 0 10px;
-}
-
-.format-popup section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex: none;
 }
 
 .format-popup__field {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
 }
 
 .format-popup__label {
@@ -398,6 +393,7 @@
   border-radius: 6px;
   background: none;
   cursor: pointer;
+  flex: none;
 }
 
 .format-popup__color-input::-webkit-color-swatch-wrapper {
@@ -420,9 +416,10 @@
   border-radius: 6px;
   background: rgba(3, 11, 7, 0.9);
   color: #ecfff0;
-  padding: 5px 8px;
-  font-size: 13px;
+  padding: 4px 6px;
+  font-size: 12px;
   cursor: pointer;
+  flex: none;
 }
 
 .format-popup__text-input {
@@ -430,9 +427,10 @@
   border-radius: 6px;
   background: rgba(3, 11, 7, 0.9);
   color: #ecfff0;
-  padding: 5px 8px;
-  font-size: 13px;
-  width: 100%;
+  padding: 4px 8px;
+  font-size: 12px;
+  width: 110px;
+  flex: none;
 }
 
 .format-popup__select:focus-visible,
@@ -546,40 +544,6 @@
   margin: 0;
 }
 
-.format-popup__check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #c0d9c7;
-  cursor: pointer;
-}
-
-.format-popup__check input {
-  accent-color: #4ade80;
-}
-
-.format-popup__reset {
-  align-self: flex-start;
-}
-
-.format-popup__arrange-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.format-popup__arrange-grid--two {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.format-popup__arrange-button {
-  padding: 5px 4px;
-  font-size: 12px;
-  text-align: center;
-}
-
 /* --- Toolbar --- */
 
 .studio-toolbar {
@@ -644,11 +608,6 @@
 }
 
 .studio-toolbar__history {
-  display: flex;
-  gap: 6px;
-}
-
-.studio-toolbar__format {
   display: flex;
   gap: 6px;
 }

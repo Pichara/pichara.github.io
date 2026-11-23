@@ -57,6 +57,12 @@ interface ColorPickerProps {
   onChange: (value: string) => void;
   /** Runs when the picker closes (ends the color-edit undo session). */
   onBlur: () => void;
+  /**
+   * Swatch-only rendering for the minimalist Format popup strip: no
+   * visible label, no hex code — the swatch's title and aria-label
+   * still name the color. The popover behaviour is identical.
+   */
+  compact?: boolean;
 }
 
 export default function ColorPicker({
@@ -64,6 +70,7 @@ export default function ColorPicker({
   value,
   onChange,
   onBlur,
+  compact = false,
 }: ColorPickerProps) {
   const [open, setOpen] = useState(false);
   const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({
@@ -143,87 +150,104 @@ export default function ColorPicker({
     close();
   }, [hexText, value, onChange, close]);
 
+  const swatch = (
+    <button
+      ref={buttonRef}
+      type="button"
+      className="format-popup__color-input color-picker__swatch"
+      style={{ backgroundColor: value }}
+      onClick={() => {
+        setHexText(value);
+        setOpen((current) => !current);
+      }}
+      aria-label={`${label} color ${value}`}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      title={`${label}: ${value} — click to change`}
+    />
+  );
+
+  const popover =
+    open
+      ? createPortal(
+          <div
+            ref={popoverRef}
+            className="color-picker__popover"
+            role="dialog"
+            aria-label={`${label} color picker`}
+            style={popoverStyle}
+          >
+            <div
+              className="color-picker__presets"
+              role="group"
+              aria-label="Preset colors"
+            >
+              {COLOR_PRESETS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  className="color-picker__preset"
+                  style={{ backgroundColor: preset }}
+                  onClick={() => {
+                    if (preset !== value) onChange(preset);
+                    close();
+                  }}
+                  aria-label={`Use ${preset}`}
+                  title={preset}
+                />
+              ))}
+            </div>
+            <label className="color-picker__hex-row">
+              <span className="color-picker__row-label">Hex</span>
+              <input
+                type="text"
+                className="color-picker__hex-input"
+                value={hexText}
+                onChange={(event) => setHexText(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") commitHex();
+                }}
+                onBlur={() => setHexText(value)}
+                aria-label="Hex color — Enter to apply"
+                spellCheck={false}
+              />
+            </label>
+            <label className="color-picker__custom-row">
+              <span className="color-picker__row-label">Custom</span>
+              <input
+                type="color"
+                className="color-picker__custom-input"
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+                aria-label={`Custom ${label.toLowerCase()} color`}
+              />
+            </label>
+            <p className="color-picker__hint">
+              Pick a swatch, or type a hex color and press Enter.
+            </p>
+          </div>,
+          document.body
+        )
+      : null;
+
+  // Compact: swatch only, no visible label or hex code.
+  if (compact) {
+    return (
+      <>
+        {swatch}
+        {popover}
+      </>
+    );
+  }
+
   return (
     <label className="format-popup__field">
       <span className="format-popup__label">{label}</span>
       <span className="format-popup__color-row">
-        <button
-          ref={buttonRef}
-          type="button"
-          className="format-popup__color-input color-picker__swatch"
-          style={{ backgroundColor: value }}
-          onClick={() => {
-            setHexText(value);
-            setOpen((current) => !current);
-          }}
-          aria-label={`${label} color ${value}`}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          title={`${label}: ${value} — click to change`}
-        />
+        {swatch}
         <code className="format-popup__color-value">{value}</code>
       </span>
-      {open
-        ? createPortal(
-            <div
-              ref={popoverRef}
-              className="color-picker__popover"
-              role="dialog"
-              aria-label={`${label} color picker`}
-              style={popoverStyle}
-            >
-              <div
-                className="color-picker__presets"
-                role="group"
-                aria-label="Preset colors"
-              >
-                {COLOR_PRESETS.map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    className="color-picker__preset"
-                    style={{ backgroundColor: preset }}
-                    onClick={() => {
-                      if (preset !== value) onChange(preset);
-                      close();
-                    }}
-                    aria-label={`Use ${preset}`}
-                    title={preset}
-                  />
-                ))}
-              </div>
-              <label className="color-picker__hex-row">
-                <span className="color-picker__row-label">Hex</span>
-                <input
-                  type="text"
-                  className="color-picker__hex-input"
-                  value={hexText}
-                  onChange={(event) => setHexText(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") commitHex();
-                  }}
-                  onBlur={() => setHexText(value)}
-                  aria-label="Hex color — Enter to apply"
-                  spellCheck={false}
-                />
-              </label>
-              <label className="color-picker__custom-row">
-                <span className="color-picker__row-label">Custom</span>
-                <input
-                  type="color"
-                  className="color-picker__custom-input"
-                  value={value}
-                  onChange={(event) => onChange(event.target.value)}
-                  aria-label={`Custom ${label.toLowerCase()} color`}
-                />
-              </label>
-              <p className="color-picker__hint">
-                Pick a swatch, or type a hex color and press Enter.
-              </p>
-            </div>,
-            document.body
-          )
-        : null}
+      {popover}
     </label>
   );
 }

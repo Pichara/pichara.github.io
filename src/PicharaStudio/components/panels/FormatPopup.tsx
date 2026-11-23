@@ -1,5 +1,7 @@
 /**
- * FormatPopup — formatting controls as a context popup above an item.
+ * FormatPopup — formatting controls as a single compact horizontal
+ * strip above an item (minimalist redesign 2026-11-23 at the owner's
+ * request: the tall vertical stack was too big).
  *
  * Replaces the old right-side FormatPanel (removed 2026-11-23 at the
  * owner's request): the canvas takes the freed space and formatting
@@ -7,18 +9,32 @@
  *
  * - on right-click (contextmenu) on a node or edge — anchored above the
  *   click point (see `components/canvas/DiagramCanvas.tsx`);
- * - from the toolbar "Format" button or the F key — anchored above the
- *   current selection (see `components/DiagramStudio.tsx`).
+ * - from the F key — anchored above the current selection
+ *   (see `components/DiagramStudio.tsx`). There is no toolbar button
+ *   for it: the toolbar "Format" button was removed 2026-11-23 at the
+ *   owner's request (right-click and F are the only ways in).
  *
- * The controls are the same as the old panel's: fill/border/text for
- * shapes, line color/width/style/label for connections, plus align /
- * distribute for 2+ shapes and a style reset. With a multi-selection
- * the popup shows (and edits from) the first element's values and
- * applies every control to all selected elements at once.
+ * One row, no title, with a ✕ close button at the end of the row:
+ * ColorPicker popover still opens from each swatch), compact selects
+ * for widths / sizes / weights, and a ↺ reset icon. Shapes get fill,
+ * border, border width, text color, font size and font weight;
+ * connections get line color, line width, line style, line type, a
+ * label field and an arrowhead toggle. With a mixed selection both
+ * groups sit side by side in the same row, separated by a divider.
+ * Align / distribute and the animated-flow toggle used to live here;
+ * they were dropped with the vertical layout — there is no other UI
+ * for them yet (see the run notes), so re-adding them means finding
+ * them a new home, not growing this strip back into a panel.
+ * With a multi-selection the popup shows (and edits from) the first
+ * element's values and applies every control to all selected elements
+ * at once.
  *
  * Closing: Esc (capture phase, so it does not also clear the
- * selection), clicking outside the popup, or the ✕ button. Discrete
- * one-shot controls (selects, checkboxes, align/distribute, reset)
+ * selection), clicking outside the popup, or the ✕ button at the end
+ * of the row (restored 2026-11-23: the minimalist redesign had dropped
+ * it by mistake — the owner meant the toolbar "Format" button to go,
+ * not this one).
+ * Discrete one-shot controls (selects, the arrowhead toggle, reset)
  * also close the popup after applying — the change is done, so the
  * popup gets out of the way. Color picking and the edge-label text
  * field keep the popup open: picking a color is a multi-step gesture
@@ -72,7 +88,6 @@ import {
   isColorPickerPopoverOpen,
 } from "../../utils/popup-escape";
 import type { EdgeLineType, EdgeStyle, NodeStyle } from "../../types";
-import type { AlignKind, DistributeAxis } from "../../utils/selection-ops";
 
 /** Where the popup anchors: a right-click point, or the selection. */
 export type FormatPopupAnchor =
@@ -99,39 +114,11 @@ const EDGE_LINE_TYPES: { value: EdgeLineType; label: string }[] = [
   { value: "orthogonal", label: "Orthogonal" },
 ];
 
-/** Align buttons: one per alignment kind (label + tooltip). */
-const ALIGN_BUTTONS: { kind: AlignKind; label: string; title: string }[] = [
-  { kind: "left", label: "⇤ Left", title: "Align left edges" },
-  { kind: "center-x", label: "↔ Center", title: "Align horizontal centers" },
-  { kind: "right", label: "Right ⇥", title: "Align right edges" },
-  { kind: "top", label: "⇧ Top", title: "Align top edges" },
-  { kind: "center-y", label: "↕ Middle", title: "Align vertical centers" },
-  { kind: "bottom", label: "Bottom ⇩", title: "Align bottom edges" },
-];
-
-/** Distribute buttons: one per axis (label + tooltip). */
-const DISTRIBUTE_BUTTONS: {
-  axis: DistributeAxis;
-  label: string;
-  title: string;
-}[] = [
-  {
-    axis: "horizontal",
-    label: "Distribute ⇄",
-    title: "Space evenly left to right (needs 3+ shapes)",
-  },
-  {
-    axis: "vertical",
-    label: "Distribute ⇅",
-    title: "Space evenly top to bottom (needs 3+ shapes)",
-  },
-];
-
 /**
- * One color control: an in-DOM picker (presets, hex field, custom color)
- * that applies on mouse click — the native color input's OS popup cannot
- * be reached reliably by mouse clicks in some browsers. The `onBlur`
- * ends the color-edit undo session when the picker closes.
+ * One color control: a swatch-only ColorPicker (compact) — the label
+ * and hex code are dropped in the strip; the swatch's title and
+ * aria-label still name the color. The `onBlur` ends the color-edit
+ * undo session when the picker closes.
  */
 interface ColorFieldProps {
   label: string;
@@ -143,6 +130,7 @@ interface ColorFieldProps {
 function ColorField({ label, value, onChange, onBlur }: ColorFieldProps) {
   return (
     <ColorPicker
+      compact
       label={label}
       value={value}
       onChange={onChange}
@@ -161,23 +149,22 @@ interface TextFieldProps {
  * Single-line text field that commits on blur (Enter blurs).
  * Uncontrolled with `defaultValue` so typing never re-renders the popup
  * or records history per keystroke; the parent remounts it (via `key`)
- * when the selection changes.
+ * when the selection changes. Compact: no visible label — the
+ * placeholder and aria-label name the field.
  */
 function TextField({ label, value, onCommit }: TextFieldProps) {
   return (
-    <label className="format-popup__field">
-      <span className="format-popup__label">{label}</span>
-      <input
-        type="text"
-        className="format-popup__text-input"
-        defaultValue={value}
-        onBlur={(event) => onCommit(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") event.currentTarget.blur();
-        }}
-        aria-label={label}
-      />
-    </label>
+    <input
+      type="text"
+      className="format-popup__text-input"
+      defaultValue={value}
+      placeholder={label}
+      onBlur={(event) => onCommit(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") event.currentTarget.blur();
+      }}
+      aria-label={label}
+    />
   );
 }
 
@@ -188,22 +175,25 @@ interface SelectFieldProps {
   onChange: (value: string) => void;
 }
 
+/**
+ * Compact select: no visible label — the label is the select's
+ * aria-label and title, so a screen reader still names it.
+ */
 function SelectField({ label, value, options, onChange }: SelectFieldProps) {
   return (
-    <label className="format-popup__field">
-      <span className="format-popup__label">{label}</span>
-      <select
-        className="format-popup__select"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
+    <select
+      className="format-popup__select"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      aria-label={label}
+      title={label}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   );
 }
 
@@ -251,10 +241,6 @@ export default function FormatPopup({
   );
   const resetSelectedStyle = useDiagramStore(
     (state) => state.resetSelectedStyle
-  );
-  const alignSelection = useDiagramStore((state) => state.alignSelection);
-  const distributeSelection = useDiagramStore(
-    (state) => state.distributeSelection
   );
 
   // True while a color picker drag is in progress: the first change of
@@ -370,7 +356,7 @@ export default function FormatPopup({
   });
 
   // Move keyboard focus into the popup once it becomes visible, so a
-  // keyboard user who opened it with F or the toolbar button lands on
+  // keyboard user who opened it with F lands on
   // its controls instead of staying on the canvas. Focusing on mount
   // does not work: at that point the popup's style is still
   // `visibility: hidden` (the layout effect's visible style has not
@@ -430,25 +416,12 @@ export default function FormatPopup({
       tabIndex={-1}
       style={popupStyle}
     >
-      <div className="format-popup__header">
-        <h2 className="format-popup__title">Format</h2>
-        <button
-          type="button"
-          className="studio-button format-popup__close"
-          onClick={onClose}
-          aria-label="Close format popup"
-        >
-          ✕
-        </button>
-      </div>
-
       {selectedNodes.length > 0 ? (
-        <section aria-label="Shape formatting">
-          <h3 className="format-popup__section-title">
-            {selectedNodes.length === 1
-              ? "Shape"
-              : `Shapes (${selectedNodes.length})`}
-          </h3>
+        <div
+          className="format-popup__row"
+          role="group"
+          aria-label="Shape formatting"
+        >
           <ColorField
             label="Fill"
             value={asHexColor(
@@ -509,31 +482,31 @@ export default function FormatPopup({
               onClose();
             }}
           />
-        </section>
+          <button
+            type="button"
+            className="studio-button format-popup__icon-button"
+            onClick={() => {
+              resetSelectedStyle();
+              onClose();
+            }}
+            aria-label="Reset style"
+            title="Reset style"
+          >
+            ↺
+          </button>
+        </div>
+      ) : null}
+
+      {selectedNodes.length > 0 && selectedEdges.length > 0 ? (
+        <span className="format-popup__divider" aria-hidden="true" />
       ) : null}
 
       {selectedEdges.length > 0 ? (
-        <section aria-label="Connection formatting">
-          <h3 className="format-popup__section-title">
-            {selectedEdges.length === 1
-              ? "Connection"
-              : `Connections (${selectedEdges.length})`}
-          </h3>
-          <TextField
-            key={selectedEdges[0]?.id}
-            label="Label"
-            value={selectedEdges[0]?.data?.label ?? ""}
-            onCommit={(value) => updateSelectedEdgeLabel(value)}
-          />
-          <SelectField
-            label="Line type"
-            value={edgeStyle.lineType}
-            options={EDGE_LINE_TYPES}
-            onChange={(value) => {
-              updateSelectedEdgeStyle({ lineType: value as EdgeLineType });
-              onClose();
-            }}
-          />
+        <div
+          className="format-popup__row"
+          role="group"
+          aria-label="Connection formatting"
+        >
           <ColorField
             label="Line"
             value={asHexColor(
@@ -564,87 +537,56 @@ export default function FormatPopup({
               onClose();
             }}
           />
-          <label className="format-popup__check">
-            <input
-              type="checkbox"
-              checked={edgeStyle.animated}
-              onChange={(event) => {
-                updateSelectedEdgeStyle({ animated: event.target.checked });
-                onClose();
-              }}
-            />
-            Animated flow
-          </label>
-          <label className="format-popup__check">
-            <input
-              type="checkbox"
-              checked={edgeStyle.arrow}
-              onChange={(event) => {
-                updateSelectedEdgeStyle({ arrow: event.target.checked });
-                onClose();
-              }}
-            />
-            Arrowhead
-          </label>
-        </section>
-      ) : null}
-
-      {selectedNodes.length >= 2 ? (
-        <section aria-label="Arrange">
-          <h3 className="format-popup__section-title">Arrange</h3>
-          <div
-            className="format-popup__arrange-grid"
-            role="group"
-            aria-label="Align"
+          <SelectField
+            label="Line type"
+            value={edgeStyle.lineType}
+            options={EDGE_LINE_TYPES}
+            onChange={(value) => {
+              updateSelectedEdgeStyle({ lineType: value as EdgeLineType });
+              onClose();
+            }}
+          />
+          <TextField
+            key={selectedEdges[0]?.id}
+            label="Label"
+            value={selectedEdges[0]?.data?.label ?? ""}
+            onCommit={(value) => updateSelectedEdgeLabel(value)}
+          />
+          <button
+            type="button"
+            className="studio-button format-popup__icon-button"
+            onClick={() => {
+              updateSelectedEdgeStyle({ arrow: !edgeStyle.arrow });
+              onClose();
+            }}
+            aria-label="Arrowhead"
+            aria-pressed={edgeStyle.arrow}
+            title="Arrowhead"
           >
-            {ALIGN_BUTTONS.map((button) => (
-              <button
-                key={button.kind}
-                type="button"
-                className="studio-button format-popup__arrange-button"
-                onClick={() => {
-                  alignSelection(button.kind);
-                  onClose();
-                }}
-                title={button.title}
-              >
-                {button.label}
-              </button>
-            ))}
-          </div>
-          <div
-            className="format-popup__arrange-grid format-popup__arrange-grid--two"
-            role="group"
-            aria-label="Distribute"
+            →
+          </button>
+          <button
+            type="button"
+            className="studio-button format-popup__icon-button"
+            onClick={() => {
+              resetSelectedStyle();
+              onClose();
+            }}
+            aria-label="Reset style"
+            title="Reset style"
           >
-            {DISTRIBUTE_BUTTONS.map((button) => (
-              <button
-                key={button.axis}
-                type="button"
-                className="studio-button format-popup__arrange-button"
-                onClick={() => {
-                  distributeSelection(button.axis);
-                  onClose();
-                }}
-                disabled={selectedNodes.length < 3}
-                title={button.title}
-              >
-                {button.label}
-              </button>
-            ))}
-          </div>
-        </section>
+            ↺
+          </button>
+        </div>
       ) : null}
-
       <button
         type="button"
-        className="studio-button format-popup__reset"
-        onClick={() => {
-          resetSelectedStyle();
-          onClose();
-        }}
+        className="studio-button format-popup__icon-button format-popup__close"
+        onClick={onClose}
+        aria-label="Close format popup"
+        title="Close"
       >
-        Reset style
+        ✕
       </button>
     </div>,
     document.body
