@@ -8,7 +8,7 @@
  * (a clip-path would cut the border off). The content layer carries the
  * label on top of either background.
  *
- * Interactions: double-click the label to edit it inline — the text
+ * Interactions: double-click the shape to edit its label inline — the text
  * itself becomes editable with no visible box around it (Enter commits,
  * Escape cancels, an empty label keeps the previous text); when the node
  * is selected, `NodeResizeControl`s show handles to resize it — the four
@@ -172,6 +172,9 @@ function BaseShapeNode({
   }, [editing, data.label, data.description, nodeWidth, nodeHeight, fitScale]);
 
   const startEditing = (): void => {
+    // Already editing: a double-click inside the editor (e.g. to select
+    // a word) must not reset the draft back to the saved label.
+    if (editing) return;
     setDraft(data.label);
     setEditing(true);
   };
@@ -244,6 +247,7 @@ function BaseShapeNode({
         <div
           className="shape-node__bg"
           aria-hidden="true"
+          onDoubleClick={startEditing}
           style={{
             backgroundColor: style.backgroundColor,
             borderColor: style.borderColor,
@@ -260,6 +264,7 @@ function BaseShapeNode({
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
           aria-hidden="true"
+          onDoubleClick={startEditing}
         >
           <polygon
             points={polygonPoints}
@@ -267,6 +272,7 @@ function BaseShapeNode({
             stroke={style.borderColor}
             strokeWidth={style.borderWidth}
             vectorEffect="non-scaling-stroke"
+            onDoubleClick={startEditing}
           />
         </svg>
       )}
